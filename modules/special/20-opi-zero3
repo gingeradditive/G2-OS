@@ -21,7 +21,7 @@ source /files/00-config
 # - SDA: PH5 > Pin3
 # - SCL: PH4 > Pin5
 #
-# Klipper
+# Kalico
 # i2c_bus: i2c.2
 
 # spi-spidev spidev1_1 > /dev/spidev1.1
@@ -30,7 +30,7 @@ source /files/00-config
 # - CLK:  PH6 > Pin23
 # - CS:   PH9 > Pin24
 #
-# Klipper
+# Kalico
 # cs_pin: gpiochip1/gpio233
 # spi_bus: spidev1.1
 

@@ -1,0 +1,19 @@
+[Unit]
+Description=Kalico 3D Printer Firmware
+Documentation=https://www.kalico.org/
+After=network-online.target
+Before=moonraker.service
+Wants=udev.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+User=pi
+RemainAfterExit=yes
+WorkingDirectory=/home/pi/kalico
+EnvironmentFile=/home/pi/printer_data/systemd/kalico.env
+ExecStart=/home/pi/kalico-env/bin/python $KALICO_ARGS
+Restart=always
+RestartSec=10

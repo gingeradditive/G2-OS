@@ -27,7 +27,7 @@ WHITE="\e[97m"
 NOC="\e[0m"
 
 ### Setup
-SERVICES=(moonraker klipper nginx sonar crowsnest)
+SERVICES=(moonraker kalico nginx sonar crowsnest)
 SYSTEMD_DIR="/etc/systemd/system"
 DEFAULT_USER="$(grep "1000" /etc/passwd | awk -F ':' '{print $1}')"
 
@@ -93,7 +93,7 @@ change_env_user() {
 
 relocate_venv() {
     local -a venvs
-    venvs=(klippy-env moonraker-env)
+    venvs=(kalico-env moonraker-env)
 
     ### KlipperScreen workaround
     if [[ "${KS_INSTALLED}" = "1" ]]; then
@@ -174,7 +174,7 @@ fix_timelapse_links() {
     sudo -u "${DEFAULT_USER}" \
     ln -sf "${src_dir}/component/timelapse.py" "${target_dir}/timelapse.py"
     sudo -u "${DEFAULT_USER}" \
-    ln -sf "${src_dir}/klipper_macro/timelapse.cfg" "${config_dir}/timelapse.cfg"
+    ln -sf "${src_dir}/kalico_macro/timelapse.cfg" "${config_dir}/timelapse.cfg"
 }
 
 fix_mainsailcfg_links() {

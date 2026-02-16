@@ -56,7 +56,7 @@ fi
 
 if [[ -d "${PRINTER_CONFIG_PATH}" ]]; then
     sudo -u "${BASE_USER}" \
-    ln -sf "${SRC_DIR}/klipper_macro/timelapse.cfg" "${PRINTER_CONFIG_PATH}/timelapse.cfg"
+    ln -sf "${SRC_DIR}/kalico_macro/timelapse.cfg" "${PRINTER_CONFIG_PATH}/timelapse.cfg"
 fi
 
 ########################################
