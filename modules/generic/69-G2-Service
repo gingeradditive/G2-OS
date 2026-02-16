@@ -70,7 +70,7 @@ fi
 echo "Execute installer"
 pushd "G2-Service" &> /dev/null || exit 1
 
-sudo -u "${BASE_USER}" bash ./install.sh
+sudo -u "${BASE_USER}" bash ./Scripts/install.sh
 
 popd &> /dev/null || exit 1
 
