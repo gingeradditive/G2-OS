@@ -17,7 +17,22 @@ source /files/00-config
 # Configuration                        #
 ########################################
 
-REPO="https://github.com/gingeradditive/G2-Service"
+# Repository URL - will be modified based on authentication method
+BASE_REPO="github.com/gingeradditive/G2-Service"
+REPO="https://${BASE_REPO}"
+
+# Check for authentication methods
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    echo "Using GitHub token for authentication"
+    REPO="https://${GITHUB_TOKEN}@${BASE_REPO}"
+elif [[ -f "/home/${BASE_USER}/.ssh/id_rsa" ]] || [[ -f "/home/${BASE_USER}/.ssh/id_ed25519" ]]; then
+    echo "Using SSH for authentication"
+    REPO="git@${BASE_REPO}"
+else
+    echo "Warning: No authentication method found for private repository"
+    echo "Please set GITHUB_TOKEN environment variable or configure SSH keys"
+fi
+
 DEPS=(git python3-pip python3-flask)
 
 ########################################
@@ -36,8 +51,16 @@ pushd "/home/${BASE_USER}" &> /dev/null || exit 1
 # Clone repository                     #
 ########################################
 
-echo "Cloning Repository"
-sudo -u "${BASE_USER}" git clone ${REPO} G2-Service
+echo "Cloning Repository: ${REPO}"
+if ! sudo -u "${BASE_USER}" git clone ${REPO} G2-Service; then
+    echo "Error: Failed to clone repository"
+    echo "Possible solutions:"
+    echo "1. Set GITHUB_TOKEN environment variable with a valid GitHub Personal Access Token"
+    echo "2. Configure SSH keys for the ${BASE_USER} user"
+    echo "3. Make the repository public if it doesn't contain sensitive information"
+    echo "4. Use a deploy key with read-only access"
+    exit 1
+fi
 
 ########################################
 # Jump into G2-Service, run installer   #
