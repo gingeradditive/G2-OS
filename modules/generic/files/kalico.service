@@ -1,6 +1,6 @@
 [Unit]
 Description=Kalico 3D Printer Firmware
-Documentation=https://www.kalico.org/
+Documentation=https://docs.kalico.gg/
 After=network-online.target
 Before=moonraker.service
 Wants=udev.target

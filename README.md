@@ -10,7 +10,7 @@ This project is a **fork of [MainsailOS](https://github.com/mainsail-crew/Mainsa
 
 ## Learn more about:
 
--   [Kalico (Firmware for Pellet 3D Printing)](https://github.com/gingeradditive/kalico)
+-   [Kalico (Firmware for Pellet 3D Printing)](https://github.com/KalicoCrew/kalico)
 -   [Moonraker (API Web Server for Kalico)](https://github.com/Arksine/moonraker)
 -   [Mainsail (Web Interface for Kalico)](https://github.com/mainsail-crew/mainsail)
 
@@ -28,7 +28,7 @@ Join our community on [Discord](https://discord.gg/mainsail) for support. You ca
 
 G2-OS comes with the following pre-installed and configured software:
 
--   [Kalico (Customized Firmware for Pellet 3D Printing)](https://github.com/gingeradditive/kalico)
+-   [Kalico (Customized Firmware for Pellet 3D Printing)](https://github.com/KalicoCrew/kalico)
 -   [Moonraker (API for Kalico)](https://github.com/Arksine/moonraker)
 -   [Mainsail (Kalico Web Interface)](https://github.com/mainsail-crew/mainsail)
 -   [Crowsnest (Webcam Streaming)](https://github.com/mainsail-crew/crowsnest)
@@ -38,7 +38,7 @@ G2-OS comes with the following pre-installed and configured software:
 ## G2-OS also includes:
 
 -   **Preconfigured Serial Connection** for the Ginger G2 using Hardware UART (PL011).
--   **Preinstalled Dependencies** for Kalico's Input Shaper. Simply build the [kalico_mcu](https://www.kalico.org/RPi_microcontroller.html) and install the service. See [Kalico documentation](https://www.kalico.org/Measuring_Resonances.html) for more info.
+-   **Preinstalled Dependencies** for Kalico's Input Shaper. Simply build the [kalico_mcu](https://docs.kalico.gg/RPi_microcontroller.html) and install the service. See [Kalico documentation](https://docs.kalico.gg/Measuring_Resonances.html) for more info.
 -   **Preinstalled Python3-serial package**, required for [CanBoot](https://github.com/Arksine/CanBoot).
 
 ## Support the Mainsail-Crew

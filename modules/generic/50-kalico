@@ -20,7 +20,7 @@ source /files/00-config
 SRC_DIR="/home/${BASE_USER}/kalico"
 ENV_DIR="/home/${BASE_USER}/kalico-env"
 
-REPO="https://github.com/gingeradditive/kalico.git"
+REPO="https://github.com/KalicoCrew/kalico.git"
 
 DEPS=(git \
       # Packages for python cffi
