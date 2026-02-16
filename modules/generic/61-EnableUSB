@@ -1,0 +1,72 @@
+#!/bin/bash
+set -xe
+export LC_ALL=C
+
+########################################
+# Functions and Basic Configuration    #
+########################################
+
+# Load common functions and set up cleanup trap
+source /common.sh
+install_cleanup_trap
+
+# Load additional configuration (e.g., BASE_USER)
+source /files/00-config
+
+########################################
+# Configuration                        #
+########################################
+
+DEPS="pmount"
+ENABLEUSB_MEDIA_FOLDER="/media"
+ENABLEUSB_PRINTER_GCODE_FOLDER="/home/${BASE_USER}/printer_data/gcodes/"
+ENABLEUSB_RULE_FILE="/etc/udev/rules.d/usbstick.rules"
+ENABLEUSB_RULE='ACTION=="add", KERNEL=="sd[a-z][0-9]", TAG+="systemd", ENV{SYSTEMD_WANTS}="usbstick-handler@%k"'
+ENABLEUSB_SERVICE_FILE="/lib/systemd/system/usbstick-handler@.service"
+ENABLEUSB_SERVICE_CONTENT="[Unit]
+Description=Mount USB sticks
+BindsTo=dev-%i.device
+After=dev-%i.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/pmount --umask 000 --noatime -r --sync %I .
+ExecStop=/usr/bin/pumount /dev/%I
+"
+
+########################################
+# Install dependencies                 #
+########################################
+
+apt-get install --yes "${DEPS}"
+
+########################################
+# Save current dir and switch to home  #
+########################################
+
+pushd "/home/${BASE_USER}" &> /dev/null || exit 1
+
+########################################
+# Clone repository                     #
+########################################
+
+## Step 0: create Gcode folders
+sudo -u "${BASE_USER}" mkdir -p "${ENABLEUSB_PRINTER_GCODE_FOLDER}"
+
+## Step 1: create rule file
+sudo -u "${BASE_USER}" ln -s "${ENABLEUSB_MEDIA_FOLDER}" "${ENABLEUSB_PRINTER_GCODE_FOLDER}"
+echo "${ENABLEUSB_RULE}" | sudo tee -a "${ENABLEUSB_RULE_FILE}"
+echo "USB rule added to ${RULES_FILE}"
+sudo udevadm control --reload-rules && sudo udevadm trigger
+echo "udev rules reloaded"
+
+## Step 2: Create service file
+echo "${ENABLEUSB_SERVICE_CONTENT}" | sudo tee "${ENABLEUSB_SERVICE_FILE}" > /dev/null
+sudo chmod 644 "${ENABLEUSB_SERVICE_FILE}"
+
+########################################
+# Return to saved directory            #
+########################################
+
+popd &> /dev/null || exit 1

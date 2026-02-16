@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 #### Patch Script
-#### This will patch MainsailOS udev rule
+#### This will patch G1OS udev rule
 ####
 #### Written by Stephan Wendel aka KwadFan <me@stephanwe.de>
 #### Copyright 2021
-#### https://github.com/mainsail-crew/MainsailOS
+#### https://github.com/mainsail-crew/G1OS
 ####
 #### This File is distributed under GPLv3
 ####
@@ -13,7 +13,7 @@
 #### This should fix error in udev not creating symlinks fpr serial devices.
 #### For details see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1035094
 #### This is fixed by: https://github.com/systemd/systemd/pull/25246
-#### To fix this error in MainsailOS we implement that file as 'user rule'.
+#### To fix this error in G1OS we implement that file as 'user rule'.
 
 # shellcheck disable=SC2034
 
@@ -25,7 +25,7 @@ set -eo pipefail
 
 ### Variables
 DEBIAN_FRONTEND="noninteractive"
-TITLE="\e[31mMainsailOS Patcher\e[0m - udev rule fix"
+TITLE="\e[31mG1OS Patcher\e[0m - udev rule fix"
 UDEV_FIX_RAW_RULE_FILE="https://raw.githubusercontent.com/systemd/systemd/main/rules.d/60-serial.rules"
 UDEV_FIX_TMP_FILE="/tmp/60-serial.rules"
 UDEV_FIX_OUTPUT_FILE="/etc/udev/rules.d/60-serial.rules"

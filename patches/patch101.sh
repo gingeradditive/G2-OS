@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 #### Patch Script
-#### This will patch MainsailOS to the Latest Changes
+#### This will patch G1OS to the Latest Changes
 ####
 #### Written by Stephan Wendel aka KwadFan <me@stephanwe.de>
 #### Copyright 2021
-#### https://github.com/mainsail-crew/MainsailOS
+#### https://github.com/mainsail-crew/G1OS
 ####
 #### This File is distributed under GPLv3
 ####
@@ -21,11 +21,11 @@ set -eo pipefail
 DEBIAN_FRONTEND="noninteractive"
 
 # Global Vars
-MAINSAILOS_VER="1.0.1"
+G1OS_VER="1.0.1"
 
-TITLE="\e[31mMainsailOS Patcher\e[0m - Patch OS to latest changes (MainsailOS ${MAINSAILOS_VER})"
-RELEASE_FILE="/etc/mainsailos-release"
-BASE_DL_URL="https://raw.githubusercontent.com/mainsail-crew/MainsailOS/develop"
+TITLE="\e[31mG1OS Patcher\e[0m - Patch OS to latest changes (G1OS ${G1OS_VER})"
+RELEASE_FILE="/etc/G1OS-release"
+BASE_DL_URL="https://raw.githubusercontent.com/mainsail-crew/G1OS/develop"
 
 # Message Vars
 MP_OK="\e[32mOK\e[0m"
@@ -73,20 +73,20 @@ check_version(){
     local version
     version="$(grep "1\.[0-9]\.[0-9]" "${RELEASE_FILE}" 2> /dev/null || true)"
     if [[ -z "${version}" ]]; then
-        echo_red "Minimum required MainsailOS Version is 1.0.0! ... [Exiting]"
+        echo_red "Minimum required G1OS Version is 1.0.0! ... [Exiting]"
         exit 1
     fi
 }
 
 # Patch Funcs
 
-# patch mainsailos-release file
+# patch G1OS-release file
 patch_release_file(){
-    sudo sed -i 's|[0-9]\.[0-9]\.[0-9]|'"${MAINSAILOS_VER}"'|' "${RELEASE_FILE}"
+    sudo sed -i 's|[0-9]\.[0-9]\.[0-9]|'"${G1OS_VER}"'|' "${RELEASE_FILE}"
 }
 
 ## This patches udev rules error
-## See https://github.com/mainsail-crew/MainsailOS/issues/190
+## See https://github.com/mainsail-crew/G1OS/issues/190
 ## Keep function naming convention for patches!
 ## For ex: patch from 1.0.0 to 1.0.1 is named patch_101
 

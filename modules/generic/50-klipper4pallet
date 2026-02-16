@@ -20,7 +20,7 @@ source /files/00-config
 SRC_DIR="/home/${BASE_USER}/klipper"
 ENV_DIR="/home/${BASE_USER}/klippy-env"
 
-REPO="https://github.com/Klipper3d/klipper.git"
+REPO="https://github.com/gingeradditive/klipper4pellet.git"
 
 DEPS=(git \
       # Packages for python cffi

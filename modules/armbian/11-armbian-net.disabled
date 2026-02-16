@@ -60,7 +60,7 @@ if [[ -f "${NC_PATH}" ]]; then
     ### Rename function
     sed -i 's|do_firstrun_automated_user_configuration|do_network_configuration|g' "${NC_PATH}"
     ### Add a patch note
-    sed -i '8 i \\n\# This is a patched version of armbian-firstrun-config for MainsailOS' "${NC_PATH}"
+    sed -i '8 i \\n\# This is a patched version of armbian-firstrun-config for G1OS' "${NC_PATH}"
     sed -i '10 i # Original located at /usr/lib/armbian/armbian-firstrun-config' "${NC_PATH}"
     sed -i '11 i # Changes made by https:\/\/github.com/mainsail-crew' "${NC_PATH}"
 fi

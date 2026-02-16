@@ -1,11 +1,11 @@
-# MainsailOS network-configurator
+# G1OS network-configurator
 # This service will run in parallel with other services
 # This is based on
 # https://github.com/armbian/build/blob/master/packages/bsp/common/lib/systemd/system/armbian-firstrun-config.service
 
 
 [Unit]
-Description=MainsailOS network configurator
+Description=G1OS network configurator
 Wants=network-online.target
 After=network.target network-online.target
 ConditionPathExists=/boot/network_config.txt

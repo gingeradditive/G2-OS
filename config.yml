@@ -4,12 +4,12 @@
   img_hash_url: "https://downloads.raspberrypi.com/raspios_oldstable_lite_armhf/images/raspios_oldstable_lite_armhf-2025-10-02/2025-10-01-raspios-bookworm-armhf-lite.img.xz.sha256"
   env:
     ARCH: armhf
-    IMAGE_ENLARGEROOT: 6000
+    IMAGE_ENLARGEROOT: 7000
     MOUNT_PROC: 1
     MOUNT_SYS: 1
   special_modules: []
   rpi_json:
-    name: "MainsailOS $VERSION$ - Raspberry Pi (32-bit)"
+    name: "G1OS $VERSION$ - Raspberry Pi (32-bit)"
     description: "A port of Raspberry Pi OS with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
     icon: "https://os.mainsail.xyz/rpi-imager.png"
     init_format: "systemd"
@@ -23,12 +23,12 @@
   img_hash_url: "https://downloads.raspberrypi.com/raspios_oldstable_lite_arm64/images/raspios_oldstable_lite_arm64-2025-10-02/2025-10-01-raspios-bookworm-arm64-lite.img.xz.sha256"
   env:
     ARCH: arm64
-    IMAGE_ENLARGEROOT: 6000
+    IMAGE_ENLARGEROOT: 7000
     MOUNT_PROC: 1
     MOUNT_SYS: 1
   special_modules: []
   rpi_json:
-    name: "MainsailOS $VERSION$ - Raspberry Pi (64-bit)"
+    name: "G1OS $VERSION$ - Raspberry Pi (64-bit)"
     description: "A port of Raspberry Pi OS with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
     icon: "https://os.mainsail.xyz/rpi-imager.png"
     init_format: "systemd"
@@ -37,97 +37,59 @@
       - "pi4-64bit"
       - "pi5-64bit"
 
-- name: armbian-orangepi4_lts-bookworm
-  type: armbian
-  img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi4_lts_bookworm.img.xz"
-  img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi4_lts_bookworm.img.xz.sha256"
-  env:
-    ARCH: arm64
-    DISTRO: armbian
-    IMAGE_ENLARGEROOT: 5000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-  special_modules:
-    - 20-opi-4lts-spi
-  rpi_json:
-    name: "MainsailOS $VERSION$ - Orange Pi 4 LTS (64-bit)"
-    description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "opi4-64bit"
+# - name: armbian-orangepi4_lts-bookworm
+#   type: armbian
+#   img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi4_lts_bookworm.img.xz"
+#   img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi4_lts_bookworm.img.xz.sha256"
+#   env:
+#     ARCH: arm64
+#     DISTRO: armbian
+#     IMAGE_ENLARGEROOT: 7000
+#     MOUNT_PROC: 1
+#     MOUNT_SYS: 1
+#   special_modules:
+#     - 20-opi-4lts-spi
+#   rpi_json:
+#     name: "G1OS $VERSION$ - Orange Pi 4 LTS (64-bit)"
+#     description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
+#     icon: "https://os.mainsail.xyz/rpi-imager.png"
+#     devices:
+#       - "opi4-64bit"
 
-- name: armbian-orangepi3_lts-bookworm
-  type: armbian
-  img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi3_lts_bookworm.img.xz"
-  img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi3_lts_bookworm.img.xz.sha256"
-  env:
-    ARCH: arm64
-    DISTRO: armbian
-    IMAGE_ENLARGEROOT: 5000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-  special_modules:
-    - 20-opi-3lts-spi
-  rpi_json:
-    name: "MainsailOS $VERSION$ - Orange Pi 3 LTS (64-bit)"
-    description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "opi3-64bit"
+# - name: armbian-orangepi3_lts-bookworm
+#   type: armbian
+#   img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi3_lts_bookworm.img.xz"
+#   img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi3_lts_bookworm.img.xz.sha256"
+#   env:
+#     ARCH: arm64
+#     DISTRO: armbian
+#     IMAGE_ENLARGEROOT: 7000
+#     MOUNT_PROC: 1
+#     MOUNT_SYS: 1
+#   special_modules:
+#     - 20-opi-3lts-spi
+#   rpi_json:
+#     name: "G1OS $VERSION$ - Orange Pi 3 LTS (64-bit)"
+#     description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
+#     icon: "https://os.mainsail.xyz/rpi-imager.png"
+#     devices:
+#       - "opi3-64bit"
 
-- name: armbian-orangepi_zero2-bookworm
-  type: armbian
-  img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi_zero2_bookworm.img.xz"
-  img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi_zero2_bookworm.img.xz.sha256"
-  env:
-    ARCH: arm64
-    DISTRO: armbian
-    IMAGE_ENLARGEROOT: 5000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-  special_modules:
-    - 20-opi-zero2
-  rpi_json:
-    name: "MainsailOS $VERSION$ - Orange Pi Zero2 (64-bit)"
-    description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "opizero2-64bit"
-
-- name: armbian-orangepi_zero3-bookworm
-  type: armbian
-  img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi_zero3_bookworm.img.xz"
-  img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi_zero3_bookworm.img.xz.sha256"
-  env:
-    ARCH: arm64
-    DISTRO: armbian
-    IMAGE_ENLARGEROOT: 5000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-  special_modules:
-    - 20-opi-zero3
-  rpi_json:
-    name: "MainsailOS $VERSION$ - Orange Pi Zero3 (64-bit)"
-    description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "opizero3-64bit"
-
-- name: armbian-btt_cb1-bookworm
-  type: armbian
-  build_only: True
-  img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-bigtreetech_cb1_bookworm.img.xz
-"
-  img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-bigtreetech_cb1_bookworm.img.xz.sha256"
-  env:
-    ARCH: arm64
-    DISTRO: armbian
-    IMAGE_ENLARGEROOT: 5000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-  rpi_json:
-    name: "MainsailOS $VERSION$ - BigTreeTech CB1 (64-bit)"
-    description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "btt_cb1-64bit"
+# - name: armbian-orangepi_zero2-bookworm
+#   type: armbian
+#   img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi_zero2_bookworm.img.xz"
+#   img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi_zero2_bookworm.img.xz.sha256"
+#   env:
+#     ARCH: arm64
+#     DISTRO: armbian
+#     IMAGE_ENLARGEROOT: 7000
+#     MOUNT_PROC: 1
+#     MOUNT_SYS: 1
+#   special_modules:
+#     - 20-opi-zero2
+#   rpi_json:
+#     name: "G1OS $VERSION$ - Orange Pi Zero2 (64-bit)"
+#     description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
+#     icon: "https://os.mainsail.xyz/rpi-imager.png"
+#     devices:
+#       - "opizero2-64bit"

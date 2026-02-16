@@ -14,39 +14,33 @@ install_cleanup_trap
 source /files/00-config
 
 ########################################
-# Set DEBIAN_FRONTEND to               #
-# noninteractive                       #
+# Configuration                        #
 ########################################
 
-if [[ "${DEBIAN_FRONTEND}" != "noninteractive" ]]; then
-    export DEBIAN_FRONTEND=noninteractive
-fi
+REPO="https://github.com/dw-0/kiauh"
+DEPS="git"
 
 ########################################
-# hold linux kernel updates            #
+# Install dependencies                 #
 ########################################
 
-apt-mark hold "${HOLD_PKGS[@]}" > /dev/null 2>&1 || true
+apt-get install --yes "${DEPS}"
 
 ########################################
-# Execute upgrade                      #
+# Save current dir and switch to home  #
 ########################################
 
-apt-get -y -o Dpkg::Options::="--force-confnew" upgrade
+pushd "/home/${BASE_USER}" &> /dev/null || exit 1
 
 ########################################
-# Cleanup                              #
+# Clone repository                     #
 ########################################
 
-apt-get -y autoremove
-apt-get clean
+echo "Cloning Repository"
+sudo -u "${BASE_USER}" git clone ${REPO} kiauh
 
 ########################################
-# Add piwheels to global pip resources #
+# Return to saved directory            #
 ########################################
 
-if [[ ! -f /etc/pip.conf ]]; then
-    echo "Adding piwheels to pip.conf"
-    echo "[global]" > /etc/pip.conf
-    echo "extra-index-url=https://www.piwheels.org/simple" >> /etc/pip.conf
-fi
+popd &> /dev/null || exit 1

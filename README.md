@@ -1,73 +1,45 @@
-![downloads](https://img.shields.io/github/downloads/mainsail-crew/MainsailOS/total)
-[![discord](https://img.shields.io/discord/758059413700345988?color=%235865F2&label=discord&logo=discord&logoColor=white&style=flat)](https://discord.gg/mainsail)
-
 <p align="center">
 <img src=".github/sdcard-logo.png" style="width:40%; max-width: 300px;" >
 </p>
 
-# MainsailOS
+# G1OS
 
-MainsailOS is a pre-configured operating system for your 3D printer's
-single-board computer (SBC). It simplifies getting started with Klipper and the
-[Mainsail](https://github.com/mainsail-crew/mainsail) web interface by providing
-everything you need in one ready-to-use package.
+A [Raspberry Pi OS](https://www.raspberrypi.org/software/) based distribution designed specifically for the **Ginger G1** 3D Printer. It includes all the necessary software and optimizations to get started with **Klipper Firmware** and **Mainsail** for 3D printing with **pellet extrusion** technology.
 
-Our images are built on stable, well-supported distributions:
+This project is a **fork of [MainsailOS](https://github.com/mainsail-crew/MainsailOS)**, tailored for the unique requirements of pellet-based 3D printing with the Ginger G1.
 
--   **Raspberry Pi:** Based on the official [Raspberry Pi OS](https://www.raspberrypi.com/software/).
--   **Other SBCs:** Based on [Armbian](https://www.armbian.com/) or
-    vendor-specific OS builds (e.g., [OrangePiOS](https://github.com/orangepi-xunlong/orangepi-build)).
+## Learn more about:
 
-All images come with the necessary software pre-installed and configured, so you
-can focus on printing. For a complete list of what's included, see the
-[Features & Components](#features--components) section below.
+-   [Klipper4Pellet (Firmware for Pellet 3D Printing)](https://github.com/gingeradditive/klipper4pellet)
+-   [Moonraker (API Web Server for Klipper)](https://github.com/Arksine/moonraker)
+-   [Mainsail (Web Interface for Klipper)](https://github.com/mainsail-crew/mainsail)
 
-## Documentation
+<!-- ## How to install G1OS?
 
-For detailed installation and setup guides, please visit our official
-documentation:
+Detailed installation instructions can be found in our [documentation](https://docs-os.mainsail.xyz), with a section dedicated to the **Ginger G1**. We recommend using the [Raspberry Pi Imager](https://docs-os.mainsail.xyz/getting-started/raspberry-pi-os-based) for installation. -->
+<!-- 
+## Need help?
 
-**[docs-os.mainsail.xyz](https://docs-os.mainsail.xyz)**
-
-## Community & Support
-
-Have questions or need help with your setup? Join our active community on
-Discord!
-
-**[Mainsail Discord Server](https://discord.gg/mainsail)**
+Join our community on [Discord](https://discord.gg/mainsail) for support. You can also check the FAQ below for common issues. -->
 
 [![discord](https://img.shields.io/discord/758059413700345988?color=%235865F2&label=discord&logo=discord&logoColor=white&style=flat)](https://discord.gg/mainsail)
 
-## Features & Components
+## What's included?
 
-MainsailOS comes ready to use with a complete software stack and several key
-configurations designed to streamline your setup process.
+G1OS comes with the following pre-installed and configured software:
 
-### Core Software Stack
+-   [Klipper4Pellet (Customized Klipper Firmware for Pellet 3D Printing)](https://github.com/gingeradditive/klipper4pellet)
+-   [Moonraker (API for Klipper)](https://github.com/Arksine/moonraker)
+-   [Mainsail (Klipper Web Interface)](https://github.com/mainsail-crew/mainsail)
+-   [Crowsnest (Webcam Streaming)](https://github.com/mainsail-crew/crowsnest)
+-   [Sonar (Keepalive Daemon)](https://github.com/mainsail-crew/sonar)
+-   [Nginx (Web Server & Proxy)](https://nginx.org/en/)
 
--   **[Klipper](https://github.com/Klipper3d/klipper):** The core 3D printer
-    firmware.
--   **[Moonraker](https://github.com/Arksine/moonraker):** The API server for
-    Klipper.
--   **[Mainsail](https://github.com/mainsail-crew/mainsail):** Our modern web
-    interface for Klipper.
--   **[Crowsnest](https://github.com/mainsail-crew/crowsnest):** A simple and
-    effective webcam streamer wrapper.
--   **[Sonar](https://github.com/mainsail-crew/sonar):** A keepalive daemon to
-    ensure WiFi stability.
--   **[Nginx](https://nginx.org/):** A high-performance web server and reverse
-    proxy to provide Mainsail and proxy the API.
+## G1OS also includes:
 
-### Key Configurations & Conveniences
-
--   **Ready-to-use UART:** The serial connection is enabled by default,
-    allowing you to directly connect your printer board without a USB cable.
--   **Input Shaper Ready:** All required Python dependencies for Klipper's
-    Input Shaper are pre-installed, saving you setup time and letting you start
-    tuning right away.
--   **Katapult Support:** The `python3-serial` package is included, which is a
-    necessary dependency for flashing firmware via
-    [Katapult (formerly CanBoot)](https://github.com/Arksine/katapult).
+-   **Preconfigured Serial Connection** for the Ginger G1 using Hardware UART (PL011).
+-   **Preinstalled Dependencies** for Klipper's Input Shaper. Simply build the [klipper_mcu](https://www.klipper3d.org/RPi_microcontroller.html) and install the service. See [Klipper documentation](https://www.klipper3d.org/Measuring_Resonances.html) for more info.
+-   **Preinstalled Python3-serial package**, required for [CanBoot](https://github.com/Arksine/CanBoot).
 
 ## Support the Mainsail-Crew
 
@@ -79,36 +51,24 @@ Your support directly fuels our development efforts. Donations help us cover
 essential costs for hardware, such as new SBCs and SD cards, which are crucial
 for testing, developing new features, and expanding board compatibility.
 
-If you find MainsailOS useful, please consider supporting our work. Every
-contribution, no matter the size, makes a real difference.
+**Q:** How do I report a bug?  
+**A:** Please ensure it's not a configuration issue with:
 
-- [GitHub Sponsors](https://github.com/sponsors/mainsail-crew)
-- [Patreon](https://www.patreon.com/meteyou)
-- [Ko-Fi](https://ko-fi.com/mainsail)
+-   Klipper
+-   Moonraker
+-   Crowsnest
+-   Sonar
 
-## Building & Development
+If the issue is specific to the **G1OS** setup or the Ginger G1 printer, report it via the **G1OS** GitHub Issues section. Provide detailed information to help us resolve the problem quickly.
 
-We've streamlined the build process, allowing you to create your own custom
-MainsailOS image without needing a complex local development environment.
+**Q:** What is the philosophy behind G1OS?  
+**A:** We maintain a **KISS** principle—Keep It Simple and Straightforward. G1OS is built on the same foundation as **MainsailOS**, but optimized for pellet printing with the Ginger G1. We aim to keep things as close to the Raspberry Pi OS and MainsailOS documentation as possible, providing extra documentation only where needed.
 
-### How it Works
+**Q:** How can I contribute?  
+**A:** Contributions are always welcome! Please check out the [CONTRIBUTING.md](https://github.com/mainsail-crew/MainsailOS/blob/develop/CONTRIBUTING.md) for ways to support the project or submit code.
 
-1.  **Fork** this repository.
-2.  **Customize** your settings or add your own modules.
-3.  **Push** your changes to your fork.
+# Build your own / Development
 
-Our GitHub Actions workflow will then automatically handle the rest.
+To build your own version of **G1OS**, simply fork this repository, enable workflows, and each push will trigger an automated image build.
 
-### Build Outcomes
-
--   **On every push:** A new image is built and uploaded as a workflow
-    `artifact`, perfect for testing.
--   **For a new release:** Manually trigger the `Release` action to publish a
-    formal release with your modifications.
-
-### Need Help?
-
-If you need guidance on customizing the build process or developing your own
-modules, feel free to connect with the Crew on our
-[Discord](https://discord.gg/mainsail) server in the `#public-dev-talk`
-channel.
+For more information on local builds, please refer to [CustomPiOS](https://github.com/guysoft/CustomPiOS) and the guide ["Build a Distro From within Raspbian/Debian/Ubuntu/CustomPiOS Distros"](https://github.com/guysoft/CustomPiOS#build-a-distro-from-within-raspbian--debian--ubuntu--custompios-distros).

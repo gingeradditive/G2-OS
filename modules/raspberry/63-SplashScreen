@@ -1,0 +1,77 @@
+#!/bin/bash
+set -xe
+export LC_ALL=C
+
+########################################
+# Functions and Basic Configuration    #
+########################################
+
+# Load common functions and set up cleanup trap
+source /common.sh
+install_cleanup_trap
+
+# Load additional configuration (e.g., BASE_USER)
+source /files/00-config
+
+########################################
+# Configuration                        #
+########################################
+
+DEPS="fbi"
+SPLASHSCREEN_BOOT_CONFIG="/boot/firmware/config.txt"
+SPLASHSCREEN_CMDLINE_CONFIG="/boot/cmdline.txt"
+SPLASHSCREEN_SERVICE_FILE="/etc/systemd/system/splashscreen.service"
+SPLASHSCREEN_SERVICE_CONTENT="[Unit]
+Description=Splash screen
+DefaultDependencies=no
+After=local-fs.target
+Before=graphical.target
+
+[Service]
+ExecStartPre=/usr/bin/sleep 2
+ExecStart=/usr/bin/fbi --noverbose -a /home/pi/printer_data/config/splash.png
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty1
+
+[Install]
+WantedBy=sysinit.target"
+
+
+########################################
+# Install dependencies                 #
+########################################
+
+apt-get install --yes "${DEPS}"
+
+########################################
+# Save current dir and switch to home  #
+########################################
+
+pushd "/home/${BASE_USER}" &> /dev/null || exit 1
+
+########################################
+# install splashscreen                 #
+########################################
+
+echo "Installing Splashscreen"
+echo "disable_splash=1" | sudo tee -a "${SPLASHSCREEN_BOOT_CONFIG}"
+sudo sed -i '1s/$/ logo.nologo consoleblank=1 loglevel=0 quiet/' "${SPLASHSCREEN_CMDLINE_CONFIG}"
+
+echo "Boot configuration files modified successfully."
+echo "${SPLASHSCREEN_SERVICE_CONTENT}" | sudo tee "${SPLASHSCREEN_SERVICE_FILE}" > /dev/null
+sudo chmod 644 "${SPLASHSCREEN_SERVICE_FILE}"
+sudo systemctl enable splashscreen.service
+echo "Splashscreen service created and enabled"
+
+########################################
+# Return to saved directory            #
+########################################
+
+popd &> /dev/null || exit 1
+
+########################################
+# Enable service                       #
+########################################
+
+systemctl_if_exists enable splashscreen

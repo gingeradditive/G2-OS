@@ -1,0 +1,58 @@
+#!/bin/bash
+set -xe
+export LC_ALL=C
+
+########################################
+# Functions and Basic Configuration    #
+########################################
+
+# Load common functions and set up cleanup trap
+source /common.sh
+install_cleanup_trap
+
+# Load additional configuration (e.g., BASE_USER)
+source /files/00-config
+
+########################################
+# Configuration                        #
+########################################
+
+REPO="https://github.com/gingeradditive/G1-Configs"
+DEPS=(git python3-pip python3-flask)
+
+########################################
+# Install dependencies                 #
+########################################
+
+apt-get install --yes "${DEPS[@]}"
+
+########################################
+# Save current dir and switch to home  #
+########################################
+
+pushd "/home/${BASE_USER}" &> /dev/null || exit 1
+
+########################################
+# Clone repository                     #
+########################################
+
+echo "Cloning Repository"
+sudo -u "${BASE_USER}" git clone ${REPO} G1-Configs
+
+########################################
+# Jump into G1-Config, run installer   #
+# and go back to home                  #
+########################################
+
+echo "Execute installer"
+pushd "G1-Configs" &> /dev/null || exit 1
+
+sudo -u "${BASE_USER}" bash ./install.sh
+
+popd &> /dev/null || exit 1
+
+########################################
+# Return to saved directory            #
+########################################
+
+popd &> /dev/null || exit 1
