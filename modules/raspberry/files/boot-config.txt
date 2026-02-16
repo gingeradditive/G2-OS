@@ -1,6 +1,6 @@
 
 ####################################################
-####     G1OS specific configurations     ####
+####     G2-OS specific configurations     ####
 ####################################################
 ####      DO NOT CHANGE SECTION BELOW !!!       ####
 ####   UNLESS YOU KNOW WHAT YOU ARE DOING !!!   ####

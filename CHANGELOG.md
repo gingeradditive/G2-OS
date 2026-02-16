@@ -32,7 +32,7 @@ All notable changes to MainsailOS will be documented in this file.
 - Add CANBUS support ([#339](https://github.com/mainsail-crew/MainsailOS/pull/339))
 - Add btt cb1 build_only image ([#328](https://github.com/mainsail-crew/MainsailOS/pull/328))
 - Add support for orangepi zero3 ([#336](https://github.com/mainsail-crew/MainsailOS/pull/336))
-- Reimplement g1os customization
+- Reimplement g2os customization
 
 ### Bug Fixes and Improvements
 

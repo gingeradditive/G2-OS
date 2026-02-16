@@ -9,7 +9,7 @@
     MOUNT_SYS: 1
   special_modules: []
   rpi_json:
-    name: "G1OS $VERSION$ - Raspberry Pi (32-bit)"
+    name: "G2-OS $VERSION$ - Raspberry Pi (32-bit)"
     description: "A port of Raspberry Pi OS with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
     icon: "https://os.mainsail.xyz/rpi-imager.png"
     init_format: "systemd"
@@ -28,7 +28,7 @@
     MOUNT_SYS: 1
   special_modules: []
   rpi_json:
-    name: "G1OS $VERSION$ - Raspberry Pi (64-bit)"
+    name: "G2-OS $VERSION$ - Raspberry Pi (64-bit)"
     description: "A port of Raspberry Pi OS with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
     icon: "https://os.mainsail.xyz/rpi-imager.png"
     init_format: "systemd"
@@ -50,7 +50,7 @@
 #   special_modules:
 #     - 20-opi-4lts-spi
 #   rpi_json:
-#     name: "G1OS $VERSION$ - Orange Pi 4 LTS (64-bit)"
+#     name: "G2-OS $VERSION$ - Orange Pi 4 LTS (64-bit)"
 #     description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
 #     icon: "https://os.mainsail.xyz/rpi-imager.png"
 #     devices:
@@ -69,7 +69,7 @@
 #   special_modules:
 #     - 20-opi-3lts-spi
 #   rpi_json:
-#     name: "G1OS $VERSION$ - Orange Pi 3 LTS (64-bit)"
+#     name: "G2-OS $VERSION$ - Orange Pi 3 LTS (64-bit)"
 #     description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
 #     icon: "https://os.mainsail.xyz/rpi-imager.png"
 #     devices:
@@ -88,7 +88,7 @@
 #   special_modules:
 #     - 20-opi-zero2
 #   rpi_json:
-#     name: "G1OS $VERSION$ - Orange Pi Zero2 (64-bit)"
+#     name: "G2-OS $VERSION$ - Orange Pi Zero2 (64-bit)"
 #     description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
 #     icon: "https://os.mainsail.xyz/rpi-imager.png"
 #     devices:
