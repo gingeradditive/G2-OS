@@ -65,7 +65,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.version }}
-          name: MainsailOS ${{ github.event.inputs.version }}
+          name: G2-OS ${{ github.event.inputs.version }}
           body: ${{ steps.changelog.outputs.content }}
           draft: true
           prerelease: false
@@ -208,7 +208,7 @@ jobs:
       - name: "✏ Rename image"
         working-directory: ./build
         run: |
-          IMAGE="${{ env.DATE }}-MainsailOS-${{ matrix.name }}-${{ env.RELEASE_TAG }}.img"
+          IMAGE="${{ env.DATE }}-G2-OS-${{ matrix.name }}-${{ env.RELEASE_TAG }}.img"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
           mv output.img "${IMAGE}"
@@ -255,7 +255,7 @@ jobs:
 
           # set name, if it is not set
           if 'name' not in rpi_data:
-              rpi_data['name'] = "MainsailOS $VERSION$"
+              rpi_data['name'] = "G2-OS $VERSION$"
 
           # replace $VERSION$ in name
           rpi_data['name'] = rpi_data['name'].replace('$VERSION$', "${{ env.RELEASE_TAG }}")
@@ -385,20 +385,20 @@ jobs:
           git commit -m "docs(changelog): update changelog"
           git push
 
-  merge-develop-to-master:
-    needs: [ update-changelog ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: "📥 Checkout"
-        uses: actions/checkout@v4
-        with:
-          ref: master
-          fetch-depth: 0
+  # merge-develop-to-master:
+  #   needs: [ update-changelog ]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: "📥 Checkout"
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: master
+  #         fetch-depth: 0
 
-      - name: "FF merge to master"
-        uses: MaximeHeckel/github-action-merge-fast-forward@v1.1.0
-        with:
-          branchtomerge: origin/develop
-          branch: master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: "FF merge to master"
+  #       uses: MaximeHeckel/github-action-merge-fast-forward@v1.1.0
+  #       with:
+  #         branchtomerge: origin/develop
+  #         branch: master
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

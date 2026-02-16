@@ -146,7 +146,7 @@ jobs:
       - name: "✏ Rename image"
         working-directory: ./build
         run: |
-          IMAGE="${{ env.DATE }}-MainsailOS-${{ matrix.name }}-${{ env.RELEASE_TAG }}.img"
+          IMAGE="${{ env.DATE }}-G2-OS-${{ matrix.name }}-${{ env.RELEASE_TAG }}.img"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
           mv output.img "${IMAGE}"
