@@ -17,7 +17,7 @@ source /files/00-config
 # Configuration                        #
 ########################################
 
-REPO="https://github.com/gingeradditive/G1-Configs"
+REPO="https://github.com/gingeradditive/G2-Service"
 DEPS=(git python3-pip python3-flask)
 
 ########################################
@@ -37,15 +37,15 @@ pushd "/home/${BASE_USER}" &> /dev/null || exit 1
 ########################################
 
 echo "Cloning Repository"
-sudo -u "${BASE_USER}" git clone ${REPO} G1-Configs
+sudo -u "${BASE_USER}" git clone ${REPO} G2-Service
 
 ########################################
-# Jump into G1-Config, run installer   #
+# Jump into G2-Service, run installer   #
 # and go back to home                  #
 ########################################
 
 echo "Execute installer"
-pushd "G1-Configs" &> /dev/null || exit 1
+pushd "G2-Service" &> /dev/null || exit 1
 
 sudo -u "${BASE_USER}" bash ./install.sh
 
