@@ -163,8 +163,10 @@ fix_mainsailcfg_links() {
     local config_dir src_dir target_dir
     config_dir="/home/${DEFAULT_USER}/printer_data/config"
     src_dir="/home/${DEFAULT_USER}/mainsail-config"
-    sudo -u "${DEFAULT_USER}" \
-    ln -sf "${src_dir}/mainsail.cfg" "${config_dir}/mainsail.cfg"
+    if [[ -f "${src_dir}/mainsail.cfg" ]]; then
+        sudo -u "${DEFAULT_USER}" \
+        ln -sf "${src_dir}/mainsail.cfg" "${config_dir}/mainsail.cfg"
+    fi
 }
 
 # Optional if kiauh module is used

@@ -16,8 +16,8 @@ server {
     gzip_http_version 1.1;
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/x-javascript application/json application/xml;
 
-    # web_path from mainsail static files
-    root /home/pi/mainsail;
+    # web_path from GingerView prebuilt static files
+    root /home/pi/mainsail/build;
 
     index index.html;
     server_name _;
@@ -37,6 +37,28 @@ server {
     }
 
     location /websocket {
+        proxy_pass http://apiserver/websocket;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 86400;
+    }
+
+    location /moonraker/ {
+        proxy_pass http://apiserver/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 86400;
+    }
+
+    location = /moonraker/websocket {
         proxy_pass http://apiserver/websocket;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;

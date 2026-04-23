@@ -17,9 +17,8 @@ source /files/00-config
 # Configuration                        #
 ########################################
 
-DOWNLOAD_URL="https://github.com/mainsail-crew/mainsail/releases/latest/download/mainsail.zip"
-CONFIG_REPO="https://github.com/mainsail-crew/mainsail-config.git"
-DEPS=(git nginx unzip)
+GINGERVIEW_REPO="https://github.com/gingeradditive/GingerView.git"
+DEPS=(git nginx)
 
 apt-get install --yes "${DEPS[@]}"
 
@@ -58,14 +57,16 @@ ln -s /var/log/nginx/mainsail-error.log /home/"${BASE_USER}"/printer_data/logs/m
 pushd /home/"${BASE_USER}" &> /dev/null || exit 1
 
 ########################################
-# Download latest release              #
+# Clone GingerView repository          #
 ########################################
 
-echo "Downloading Mainsail"
-sudo -u "${BASE_USER}" wget -q --show-progress -O mainsail.zip "${DOWNLOAD_URL}"
-sudo -u "${BASE_USER}" unzip mainsail.zip -d /home/"${BASE_USER}"/mainsail
-## cleanup
-rm /home/"${BASE_USER}"/mainsail.zip
+echo "Cloning GingerView"
+sudo -u "${BASE_USER}" git clone --depth 1 "${GINGERVIEW_REPO}" /home/"${BASE_USER}"/mainsail
+
+if [[ ! -d /home/"${BASE_USER}"/mainsail/build ]]; then
+    echo "Missing GingerView build artifacts in /home/${BASE_USER}/mainsail/build"
+    exit 1
+fi
 
 ########################################
 # Fix userrights                       #
@@ -75,12 +76,10 @@ gpasswd -a www-data "${BASE_USER}"
 chmod g+x /home/"${BASE_USER}"
 
 ########################################
-# Setup mainsail.cfg                   #
+# Remove old mainsail.cfg link         #
 ########################################
 
-echo "Installing mainsail.cfg"
-sudo -u "${BASE_USER}" git clone ${CONFIG_REPO} mainsail-config
-ln -sf /home/"${BASE_USER}"/mainsail-config/mainsail.cfg /home/"${BASE_USER}"/printer_data/config/mainsail.cfg
+rm -f /home/"${BASE_USER}"/printer_data/config/mainsail.cfg
 
 ########################################
 # Return to last directory             #
