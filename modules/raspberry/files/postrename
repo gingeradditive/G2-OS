@@ -1,0 +1,111 @@
+#!/bin/bash
+#### Post Rename (legacy rc.local hook)
+####
+#### Written by Stephan Wendel aka KwadFan <me@stephanwe.de>
+#### Copyright 2021
+#### https://github.com/mainsail-crew/MainsailOS
+####
+#### This File is distributed under GPLv3
+####
+#### Runs from /etc/rc.local on the first boot after RPi-Imager's firstrun.sh
+#### has renamed the default user. All rename transforms (service files, env
+#### files, venv shebangs, polkit, nginx root, symlinks, …) live in the
+#### shared library and are kept in sync with the cloud-init variant:
+####     /usr/local/lib/mainsailos/postrename-lib
+####
+#### This script only holds the legacy-specific bits:
+####   * gate on sdcard-resize / firstrun completion via cmdline.txt,
+####   * skip path when the default user is still the build-time @BASE_USER@,
+####   * self-destruct + rc.local entry removal at the end,
+####   * final reboot.
+
+# shellcheck enable=require-variable-braces
+
+## Set LC_ALL to prevent errors
+export LC_ALL=C
+
+# Colored Output
+RED="\e[31m"
+YEL="\e[33m"
+GRE="\e[32m"
+WHITE="\e[97m"
+NOC="\e[0m"
+
+LIB="/usr/local/lib/mainsailos/postrename-lib"
+
+if [[ ! -f "${LIB}" ]]; then
+    echo -e "[${RED}ERROR${NOC}] ${WHITE}missing library ${LIB}${NOC}" >&2
+    exit 1
+fi
+
+# shellcheck source=/dev/null
+source "${LIB}"
+
+check_skip() {
+    local cmdltxt
+
+    ## Boot partition is mounted under /boot/firmware since Bookworm;
+    ## older Raspberry Pi OS releases mounted it under /boot.
+    if [[ -f "/boot/firmware/cmdline.txt" ]]; then
+        cmdltxt="/boot/firmware/cmdline.txt"
+    else
+        cmdltxt="/boot/cmdline.txt"
+    fi
+
+    ## Make sure sdcard resize and first-boot provisioning are finished.
+    ## Bookworm and earlier: cmdline.txt contains `init=.../firstboot` and
+    ##                       `systemd.run=.../firstrun.sh` until both finish.
+    ## Trixie and later:     cmdline.txt contains the `resize` keyword which
+    ##                       is removed by the initramfs once resize completed.
+    if { grep -Eq 'init=[^[:space:]]*firstboot' "${cmdltxt}" \
+         && grep -q 'systemd.run=' "${cmdltxt}"; } \
+       || grep -Eq '(^|[[:space:]])resize([[:space:]]|$)' "${cmdltxt}"; then
+        echo -e "[${RED}ERROR${NOC}] \
+        ${WHITE}Sdcard resize and firstrun are not finished yet ... [ABORT]${NOC}"
+        ## Make sure not failing rc.local
+        return 0
+    fi
+
+    ## Abort if user is still the build-time base user (no rename happened)
+    ## @BASE_USER@ is substituted at build time (see modules/raspberry/61-postrename).
+    if [[ "${DEFAULT_USER}" == "@BASE_USER@" ]]; then
+        echo -e "[${YEL}SKIPPED${NOC}] \
+        ${WHITE}User is ${DEFAULT_USER}! Nothing to do ...${NOC}"
+        cleanup
+        exit 0
+    fi
+}
+
+cleanup() {
+    echo -e "${WHITE}Cleanup files, remove postrename ...${NOC}"
+    # Cleanup self
+    rm -rf "${0}"
+    postrename_cleanup_lib
+    # Cleanup rc.local entry
+    sed -i '/\/postrename/d' /etc/rc.local
+    sleep 2
+}
+
+postrename() {
+    echo -e "\n\t${WHITE}Trying to fix user rename ...${NOC}"
+    ## Apply all transforms (stop services, patch files, restart services).
+    postrename_apply_all
+
+    ## wait 30sec to come up
+    echo -e "${WHITE}Waiting 30 seconds for service restart completed ...${NOC}"
+    sleep 30
+}
+
+main() {
+    check_skip
+
+    postrename
+    cleanup
+
+    echo -e "${GRE}Reboot system ...${NOC}"
+    reboot
+
+    exit 0
+}
+
+main
