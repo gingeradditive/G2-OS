@@ -1,114 +1,126 @@
-![downloads](https://img.shields.io/github/downloads/mainsail-crew/MainsailOS/total)
-[![discord](https://img.shields.io/discord/758059413700345988?color=%235865F2&label=discord&logo=discord&logoColor=white&style=flat)](https://discord.gg/mainsail)
-
 <p align="center">
-<img src=".github/sdcard-logo.png" style="width:40%; max-width: 300px;" >
+<img src=".github/g2-logo.png" style="width:40%; max-width: 300px;" >
 </p>
 
-# MainsailOS
+# G2-OS
 
-MainsailOS is a pre-configured operating system for your 3D printer's
-single-board computer (SBC). It simplifies getting started with Klipper and the
-[Mainsail](https://github.com/mainsail-crew/mainsail) web interface by providing
-everything you need in one ready-to-use package.
+G2-OS is the system image of the **Ginger G2** pellet 3D printer. It is not an
+application: it is a set of customisation scripts that run inside the chroot of
+an official Raspberry Pi OS image and turn it into a machine that boots straight
+into the printer's operator interface.
 
-Our images are built on stable, well-supported distributions:
+It is a fork of [MainsailOS](https://github.com/mainsail-crew/MainsailOS), with
+three substitutions:
 
--   **Raspberry Pi:** Based on the official [Raspberry Pi OS](https://www.raspberrypi.com/software/).
--   **Other SBCs:** Based on [Armbian](https://www.armbian.com/) or
-    vendor-specific OS builds (e.g., [OrangePiOS](https://github.com/orangepi-xunlong/orangepi-build)).
+| MainsailOS | G2-OS | Why |
+|---|---|---|
+| Klipper | **[Kalico](https://github.com/KalicoCrew/kalico)** | Klipper fork, required for pellet extrusion |
+| Mainsail | **[GingerView](https://github.com/gingeradditive/GingerView)** | The G2 operator interface |
+| — | **[G2-Service](https://github.com/gingeradditive/G2-Service)** | The machine's local backend (Wi-Fi, timezone, configuration) |
 
-All images come with the necessary software pre-installed and configured, so you
-can focus on printing. For a complete list of what's included, see the
-[Features & Components](#features--components) section below.
+The rest of the MainsailOS stack — Moonraker, Crowsnest, Sonar, nginx — is
+inherited almost unchanged. Staying close to upstream is a deliberate goal: the
+smaller the divergence, the cheaper it is to pull in their work.
 
-## Documentation
+## Target hardware
 
-For detailed installation and setup guides, please visit our official
-documentation:
+**Raspberry Pi 4 Model B, 64-bit, only.** `config.yml` builds a single image.
+Upstream's 32-bit Pi, Orange Pi and BigTreeTech CB1 targets are not carried here
+because we neither ship nor test that hardware.
 
-**[docs-os.mainsail.xyz](https://docs-os.mainsail.xyz)**
+## Reaching the machine
 
-## Community & Support
+The printer is reached over mDNS at **`http://g2.local`**, which is what the
+QR/NFC tag on the machine points to. GingerView is served by nginx on port 80,
+with Moonraker proxied on the same origin, so neither a browser nor GingerSlicer
+ever has to name a port:
 
-Have questions or need help with your setup? Join our active community on
-Discord!
+| Path | Goes to |
+|---|---|
+| `/` | GingerView (SPA, `try_files … /index.html`) |
+| `/websocket` | Moonraker |
+| `/printer/`, `/api/`, `/access/`, `/machine/`, `/server/` | Moonraker |
+| `/service/` | G2-Service |
 
-**[Mainsail Discord Server](https://discord.gg/mainsail)**
+The `/service/` location is not written by this repository: every G2 service
+drops its own `location` into `/etc/nginx/g2-locations.d/`, which the GingerView
+site includes. That is why changing one service's paths never means editing a
+file that lives in another repository.
 
-[![discord](https://img.shields.io/discord/758059413700345988?color=%235865F2&label=discord&logo=discord&logoColor=white&style=flat)](https://discord.gg/mainsail)
+## What is installed
 
-## Features & Components
+### Core stack
 
-MainsailOS comes ready to use with a complete software stack and several key
-configurations designed to streamline your setup process.
+-   **[Kalico](https://github.com/KalicoCrew/kalico)** in `~/kalico`, venv
+    `~/kalico-env`, unit `kalico.service`.
+-   **[Moonraker](https://github.com/Arksine/moonraker)** — the API server.
+-   **[GingerView](https://github.com/gingeradditive/GingerView)** in
+    `~/GingerView`, served by nginx from its committed `build/` directory.
+-   **[G2-Service](https://github.com/gingeradditive/G2-Service)** in
+    `~/G2-Service`, on `:8000`, proxied at `/service/`.
+-   **[Crowsnest](https://github.com/mainsail-crew/crowsnest)** — webcam streamer.
+-   **[Sonar](https://github.com/mainsail-crew/sonar)** — Wi-Fi keepalive daemon.
+-   **[KAMP](https://github.com/kyleisah/Klipper-Adaptive-Meshing-Purging)** —
+    adaptive meshing and purging macros, linked at `printer_data/config/KAMP`.
+-   **[Nginx](https://nginx.org/)** — web server and reverse proxy.
 
-### Core Software Stack
+### Machine conveniences
 
--   **[Klipper](https://github.com/Klipper3d/klipper):** The core 3D printer
-    firmware.
--   **[Moonraker](https://github.com/Arksine/moonraker):** The API server for
-    Klipper.
--   **[Mainsail](https://github.com/mainsail-crew/mainsail):** Our modern web
-    interface for Klipper.
--   **[Crowsnest](https://github.com/mainsail-crew/crowsnest):** A simple and
-    effective webcam streamer wrapper.
--   **[Sonar](https://github.com/mainsail-crew/sonar):** A keepalive daemon to
-    ensure WiFi stability.
--   **[Nginx](https://nginx.org/):** A high-performance web server and reverse
-    proxy to provide Mainsail and proxy the API.
+-   **Ready-to-use UART** — the hardware serial port (PL011) is enabled and the
+    serial console disabled, so the printer board connects without a USB cable.
+-   **Input Shaper ready** — Kalico's Python dependencies are pre-installed.
+-   **Katapult support** — `python3-serial` is included.
+-   **USB stick auto-mount** — a stick is mounted read-only under `/media` and
+    surfaces inside the gcode folder, so an operator can print from it without a
+    terminal.
+-   **Boot splash** — the G2 logo replaces the kernel log on boot.
 
-### Key Configurations & Conveniences
+## Building
 
--   **Ready-to-use UART:** The serial connection is enabled by default,
-    allowing you to directly connect your printer board without a USB cable.
--   **Input Shaper Ready:** All required Python dependencies for Klipper's
-    Input Shaper are pre-installed, saving you setup time and letting you start
-    tuning right away.
--   **Katapult Support:** The `python3-serial` package is included, which is a
-    necessary dependency for flashing firmware via
-    [Katapult (formerly CanBoot)](https://github.com/Arksine/katapult).
+Every push to `main` builds an image through GitHub Actions and uploads it as a
+workflow artifact. To publish a release, trigger the `Release` workflow manually
+with a SemVer version.
 
-## Support the Mainsail-Crew
+There is no supported local build; the image is produced by
+[CustoPiZer](https://github.com/OctoPrint/CustoPiZer) in CI.
 
-MainsailOS is a passion project developed and maintained by the Mainsail Crew.
-We dedicate a significant amount of our free time, almost daily, to keep the
-project alive and moving forward.
+### How the build is put together
 
-Your support directly fuels our development efforts. Donations help us cover
-essential costs for hardware, such as new SBCs and SD cards, which are crucial
-for testing, developing new features, and expanding board compatibility.
+`config.yml` declares the target. The workflow flattens `modules/generic/` and
+`modules/raspberry/` into one directory and CustoPiZer runs the scripts in name
+order inside the image's chroot:
 
-If you find MainsailOS useful, please consider supporting our work. Every
-contribution, no matter the size, makes a real difference.
+| Module | What it does |
+|---|---|
+| `10-config-raspberry` | Boot config, UART, I2C, swap, user setup |
+| `30-headless-nm`, `31-wifi-powersave-off` | Networking |
+| `32-canbus` | CAN interface |
+| `50-kalico` | Kalico + venv + `kalico.service` |
+| `51-moonraker` | Moonraker + `moonraker.conf` |
+| `52-gingerview` | Clones GingerView and runs its own `script/install.sh` |
+| `53-crowsnest`, `54-timelapse`, `55-sonar` | Webcam, timelapse, keepalive |
+| `56-kamp` | KAMP macros |
+| `60-mainsailos` | Release file, hostname `g2`, shared dependencies |
+| `61-postrename-cloudinit` | First-boot user rename (cloud-init) |
+| `62-EnableUSB` | USB stick auto-mount |
+| `63-SplashScreen` | Boot splash |
+| `69-G2-Service` | Clones G2-Service and runs its installer |
+| `98-remove-passwordless-sudo` | Restores the sudo password |
 
-- [GitHub Sponsors](https://github.com/sponsors/mainsail-crew)
-- [Patreon](https://www.patreon.com/meteyou)
-- [Ko-Fi](https://ko-fi.com/mainsail)
+Two modules deliberately delegate to the installer of the repository they are
+installing (`52-gingerview`, `69-G2-Service`) rather than reimplementing it:
+those installers are tested in their own repositories and are written to run
+unattended inside a build chroot.
 
-## Building & Development
+### First boot and the user rename
 
-We've streamlined the build process, allowing you to create your own custom
-MainsailOS image without needing a complex local development environment.
+The image ships with the build-time user `pi`. If the Raspberry Pi Imager is
+told to use a different username, cloud-init renames it on first boot and
+`/usr/local/lib/mainsailos/postrename-lib` rewrites the paths that embed the old
+one: systemd units, `.env` files, venv shebangs, the nginx site and the
+symlinks. **A first boot with a username other than `pi` is the single most
+valuable thing to test on a new image.**
 
-### How it Works
+## Licence
 
-1.  **Fork** this repository.
-2.  **Customize** your settings or add your own modules.
-3.  **Push** your changes to your fork.
-
-Our GitHub Actions workflow will then automatically handle the rest.
-
-### Build Outcomes
-
--   **On every push:** A new image is built and uploaded as a workflow
-    `artifact`, perfect for testing.
--   **For a new release:** Manually trigger the `Release` action to publish a
-    formal release with your modifications.
-
-### Need Help?
-
-If you need guidance on customizing the build process or developing your own
-modules, feel free to connect with the Crew on our
-[Discord](https://discord.gg/mainsail) server in the `#public-dev-talk`
-channel.
+Inherited from MainsailOS — see [LICENSE](LICENSE).

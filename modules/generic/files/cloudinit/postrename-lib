@@ -9,7 +9,7 @@
 # shellcheck disable=SC2034  # variables exported for callers
 
 ### Setup (variables are intentionally exported for callers)
-SERVICES=(moonraker klipper nginx sonar crowsnest)
+SERVICES=(moonraker kalico nginx sonar crowsnest g2-service)
 SYSTEMD_DIR="/etc/systemd/system"
 DEFAULT_USER="$(getent passwd 1000 | cut -d: -f1)"
 LIB_DIR="/usr/local/lib/mainsailos"
@@ -55,11 +55,15 @@ start_services() {
 }
 
 ### Change nginx root
+### GingerView's installer writes the site to sites-available when nginx.conf
+### includes that directory, and falls back to conf.d otherwise; both paths are
+### handled here because the fallback is what a minimal image would use.
 change_www_root() {
-    if [[ -f /etc/nginx/sites-available/mainsail ]]; then
-        sed -i "s|/home/@BASE_USER@/mainsail|/home/${DEFAULT_USER}/mainsail|g" \
-            /etc/nginx/sites-available/mainsail
-    fi
+    local site
+    for site in /etc/nginx/sites-available/gingerview /etc/nginx/conf.d/gingerview.conf; do
+        [[ -f "${site}" ]] || continue
+        sed -i "s|/home/@BASE_USER@/GingerView|/home/${DEFAULT_USER}/GingerView|g" "${site}"
+    done
 }
 
 ### change username in service files
@@ -87,7 +91,7 @@ change_env_user() {
 
 relocate_venv() {
     local -a venvs
-    venvs=(klippy-env moonraker-env crowsnest-env .KlipperScreen-env)
+    venvs=(kalico-env moonraker-env crowsnest-env .KlipperScreen-env G2-Service/venv)
 
     for venv in "${venvs[@]}"; do
         [[ -d "/home/${DEFAULT_USER}/${venv}" ]] || continue
@@ -155,13 +159,13 @@ fix_timelapse_links() {
         ln -sf "${src_dir}/klipper_macro/timelapse.cfg" "${config_dir}/timelapse.cfg"
 }
 
-fix_mainsailcfg_links() {
+fix_kamp_links() {
     local config_dir src_dir
     config_dir="/home/${DEFAULT_USER}/printer_data/config"
-    src_dir="/home/${DEFAULT_USER}/mainsail-config"
+    src_dir="/home/${DEFAULT_USER}/Klipper-Adaptive-Meshing-Purging"
     [[ -d "${src_dir}" && -d "${config_dir}" ]] || return 0
     sudo -u "${DEFAULT_USER}" \
-        ln -sf "${src_dir}/mainsail.cfg" "${config_dir}/mainsail.cfg"
+        ln -sfn "${src_dir}/Configuration" "${config_dir}/KAMP"
 }
 
 # Optional if kiauh module is used
@@ -183,7 +187,7 @@ postrename_apply_all() {
     run_step "patch_polkit_rules"      patch_polkit_rules
     run_step "fix_bin_links"           fix_bin_links
     run_step "fix_timelapse_links"     fix_timelapse_links
-    run_step "fix_mainsailcfg_links"   fix_mainsailcfg_links
+    run_step "fix_kamp_links"          fix_kamp_links
     run_step "fix_kiauh_links"         fix_kiauh_links
     run_step "systemctl daemon-reload" systemctl daemon-reload
     sleep 2

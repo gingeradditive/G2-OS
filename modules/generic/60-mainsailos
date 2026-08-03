@@ -17,8 +17,11 @@ source /files/00-config
 # Configuration                        #
 ########################################
 
-# Use DIST_NAME in lowercase as the new hostname
-NEW_HOSTNAME=${DIST_NAME,,}
+# Not derived from DIST_NAME, which would give "g2-os". The machine is reached
+# over mDNS at g2.local -- that is the address on the QR/NFC tag applied to the
+# printer, and what GingerView's documentation tells operators to use -- so the
+# hostname has to be exactly "g2".
+NEW_HOSTNAME="g2"
 
 function get_parent {
     grep VERSION_CODENAME /etc/os-release | cut -d '=' -f2
@@ -68,5 +71,11 @@ DEPS=( \
     python3-serial \
     # python3-opencv is needed for moonraker-obico by obico in version 2.0
     python3-opencv \
+    # avahi-daemon publishes g2.local, which is the only address the operator is
+    # given. Raspberry Pi OS Lite already ships it; naming it here keeps the
+    # dependency explicit rather than inherited from the base image.
+    avahi-daemon \
 )
 apt-get install -y "${DEPS[@]}"
+
+systemctl_if_exists enable avahi-daemon.service

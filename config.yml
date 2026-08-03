@@ -1,21 +1,10 @@
-- name: raspberry_pi-armhf-trixie
-  type: raspberry
-  img_download_url: "https://downloads.raspberrypi.org/raspios_lite_armhf_latest.torrent"
-  img_hash_url: "https://downloads.raspberrypi.org/raspios_lite_armhf_latest.sha256"
-  env:
-    ARCH: armv7l
-    IMAGE_ENLARGEROOT: 6000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-    INIT_FORMAT: cloudinit-rpi
-  special_modules: []
-  rpi_json:
-    name: "MainsailOS $VERSION$ - Raspberry Pi (32-bit)"
-    description: "A port of Raspberry Pi OS with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "pi1-32bit"
-      - "pi2-32bit"
+# G2-OS builds exactly one image: the Ginger G2 is a Raspberry Pi 4 Model B and
+# nothing else. Upstream MainsailOS ships six targets (32-bit Pi, four Orange Pi
+# variants and the BTT CB1); carrying them here would mean maintaining and
+# testing hardware we do not sell.
+#
+# init_format for the Raspberry Pi Imager is not declared under rpi_json on
+# purpose: the release workflow derives it from env.INIT_FORMAT below.
 
 - name: raspberry_pi-arm64-trixie
   type: raspberry
@@ -23,115 +12,18 @@
   img_hash_url: "https://downloads.raspberrypi.org/raspios_lite_arm64_latest.sha256"
   env:
     ARCH: arm64
-    IMAGE_ENLARGEROOT: 6000
+    # 6000 upstream. We install GingerView, G2-Service and KAMP on top of the
+    # same stack, so the root partition needs more headroom.
+    IMAGE_ENLARGEROOT: 7000
     MOUNT_PROC: 1
     MOUNT_SYS: 1
     INIT_FORMAT: cloudinit-rpi
   special_modules: []
   rpi_json:
-    name: "MainsailOS $VERSION$ - Raspberry Pi (64-bit)"
-    description: "A port of Raspberry Pi OS with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
+    name: "G2-OS $VERSION$ - Ginger G2 (Raspberry Pi 4)"
+    description: "System image of the Ginger G2 pellet 3D printer - Kalico, Moonraker, GingerView"
+    # TODO: served by mainsail.xyz, a domain we do not control. Replace with an
+    # asset hosted by us before the image is handed to customers.
     icon: "https://os.mainsail.xyz/rpi-imager.png"
     devices:
-      - "pi3-64bit"
       - "pi4-64bit"
-      - "pi5-64bit"
-
-- name: armbian-orangepi4_lts-trixie
-  type: armbian
-  img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi4_lts_trixie.img.xz"
-  img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi4_lts_trixie.img.xz.sha256"
-  env:
-    ARCH: arm64
-    DISTRO: armbian
-    IMAGE_ENLARGEROOT: 5000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-    INIT_FORMAT: cloudinit
-  special_modules:
-    - 20-opi-4lts
-  rpi_json:
-    name: "MainsailOS $VERSION$ - Orange Pi 4 LTS (64-bit)"
-    description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "opi4-64bit"
-
-- name: armbian-orangepi3_lts-trixie
-  type: armbian
-  img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi3_lts_trixie.img.xz"
-  img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi3_lts_trixie.img.xz.sha256"
-  env:
-    ARCH: arm64
-    DISTRO: armbian
-    IMAGE_ENLARGEROOT: 5000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-    INIT_FORMAT: cloudinit
-  special_modules:
-    - 20-opi-3lts
-  rpi_json:
-    name: "MainsailOS $VERSION$ - Orange Pi 3 LTS (64-bit)"
-    description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "opi3-64bit"
-
-- name: armbian-orangepi_zero2-trixie
-  type: armbian
-  img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi_zero2_trixie.img.xz"
-  img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi_zero2_trixie.img.xz.sha256"
-  env:
-    ARCH: arm64
-    DISTRO: armbian
-    IMAGE_ENLARGEROOT: 5000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-    INIT_FORMAT: cloudinit
-  special_modules:
-    - 20-opi-zero2
-  rpi_json:
-    name: "MainsailOS $VERSION$ - Orange Pi Zero2 (64-bit)"
-    description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "opizero2-64bit"
-
-- name: armbian-orangepi_zero3-trixie
-  type: armbian
-  img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi_zero3_trixie.img.xz"
-  img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-orangepi_zero3_trixie.img.xz.sha256"
-  env:
-    ARCH: arm64
-    DISTRO: armbian
-    IMAGE_ENLARGEROOT: 5000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-    INIT_FORMAT: cloudinit
-  special_modules:
-    - 20-opi-zero3
-  rpi_json:
-    name: "MainsailOS $VERSION$ - Orange Pi Zero3 (64-bit)"
-    description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "opizero3-64bit"
-
-- name: armbian-btt_cb1-trixie
-  type: armbian
-  build_only: True
-  img_download_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-bigtreetech_cb1_trixie.img.xz"
-  img_hash_url: "https://github.com/mainsail-crew/armbian-builds/releases/latest/download/armbian-bigtreetech_cb1_trixie.img.xz.sha256"
-  env:
-    ARCH: arm64
-    DISTRO: armbian
-    IMAGE_ENLARGEROOT: 5000
-    MOUNT_PROC: 1
-    MOUNT_SYS: 1
-    INIT_FORMAT: cloudinit
-  rpi_json:
-    name: "MainsailOS $VERSION$ - BigTreeTech CB1 (64-bit)"
-    description: "A port of Armbian with preinstalled Klipper/Moonraker/Mainsail for 3D printers"
-    icon: "https://os.mainsail.xyz/rpi-imager.png"
-    devices:
-      - "btt_cb1-64bit"

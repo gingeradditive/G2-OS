@@ -2,7 +2,7 @@
 
 export BASE_USER=pi
 export BASE_PASSWORD=raspberry
-export DIST_NAME=MainsailOS
+export DIST_NAME=G2-OS
 
 export PRINTER_DATA_DIRS="printer_data printer_data/config printer_data/comms printer_data/logs printer_data/systemd"
 export MOONRAKER_CONFIG="/home/${BASE_USER}/printer_data/config/moonraker.conf"

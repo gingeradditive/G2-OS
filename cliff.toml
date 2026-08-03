@@ -11,7 +11,7 @@ All notable changes to MainsailOS will be documented in this file.\n
 # https://tera.netlify.app/docs/#introduction
 body = """
 {% if version %}\
-    ## [{{ version | trim_start_matches(pat="v") }}](https://github.com/mainsail-crew/MainsailOS/releases/tag/{{version}}) - {{ timestamp | date(format="%Y-%m-%d") }}
+    ## [{{ version | trim_start_matches(pat="v") }}](https://github.com/gingeradditive/G2-OS-dev/releases/tag/{{version}}) - {{ timestamp | date(format="%Y-%m-%d") }}
 \
 {% else %}\
     ## [unreleased]
@@ -47,7 +47,7 @@ footer = """
 
 # postprocessors
 postprocessors = [
-    { pattern = '<REPO>', replace = "https://github.com/mainsail-crew/MainsailOS" }, # replace repository URL
+    { pattern = '<REPO>', replace = "https://github.com/gingeradditive/G2-OS-dev" }, # replace repository URL
 ]
 
 [git]

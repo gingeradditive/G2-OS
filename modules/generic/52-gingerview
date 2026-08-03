@@ -1,0 +1,111 @@
+#!/bin/bash
+set -xe
+export LC_ALL=C
+
+########################################
+# Functions and Basic Configuration    #
+########################################
+
+# Load common functions and set up cleanup trap
+source /common.sh
+install_cleanup_trap
+
+# Load additional configuration (e.g., BASE_USER)
+source /files/00-config
+
+########################################
+# Configuration                        #
+########################################
+
+# GingerView replaces Mainsail as the operator interface of the Ginger G2.
+#
+# Unlike the Mainsail module this one ships no nginx configuration of its own:
+# GingerView carries its own installer, which writes the site, proxies Moonraker
+# on the same origin and includes /etc/nginx/g2-locations.d/ so that every other
+# G2 service can drop in its own location from its own repository. Keeping that
+# configuration here as well would mean maintaining the same file in two repos.
+
+REPO="https://github.com/gingeradditive/GingerView.git"
+SRC_DIR="/home/${BASE_USER}/GingerView"
+DEPS=(git nginx)
+
+########################################
+# Install dependencies                 #
+########################################
+
+apt-get install --yes "${DEPS[@]}"
+
+########################################
+# Create printer_data directories      #
+########################################
+
+# The installer registers GingerView in printer_data/config/moonraker.conf,
+# which 51-moonraker has already deposited by the time we get here.
+create_user_directories
+
+########################################
+# Modify Logrotate for nginx           #
+########################################
+
+echo "Modify logrotate cycle from 14d to 2d"
+sed -i 's/rotate 14/rotate 2/' /etc/logrotate.d/nginx
+
+########################################
+# Switch to BASE_USER home directory   #
+########################################
+
+pushd /home/"${BASE_USER}" &> /dev/null || exit 1
+
+########################################
+# Clone GingerView repository          #
+########################################
+
+# Not a shallow clone: moonraker's update manager registers GingerView as a
+# git_repo and inspects the history, which it rejects on a shallow checkout.
+echo "Cloning GingerView"
+sudo -u "${BASE_USER}" git clone "${REPO}" "${SRC_DIR}"
+
+# CI commits build/ to the repository so that installing needs no Node toolchain.
+# If it is missing the image would boot with an empty web root, so stop here
+# rather than ship one.
+if [[ ! -f "${SRC_DIR}/build/index.html" ]]; then
+    echo "Missing GingerView build artifacts in ${SRC_DIR}/build"
+    exit 1
+fi
+
+########################################
+# Run the GingerView installer         #
+########################################
+
+# --skip-packages: nginx is already in DEPS above.
+# The installer detects the build chroot on its own (no /run/systemd/system) and
+# then only enables the units, leaving the start to the first real boot.
+echo "Installing GingerView"
+bash "${SRC_DIR}/script/install.sh" \
+    --src "${SRC_DIR}" \
+    --user "${BASE_USER}" \
+    --skip-packages
+
+########################################
+# Return to last directory             #
+########################################
+
+popd &> /dev/null || exit 1
+
+########################################
+# Link log files                       #
+########################################
+
+# Dangling until nginx first runs, exactly as with the Mainsail module.
+echo "Linking log files"
+ln -sf /var/log/nginx/gingerview-access.log \
+    /home/"${BASE_USER}"/printer_data/logs/gingerview-access.log
+ln -sf /var/log/nginx/gingerview-error.log \
+    /home/"${BASE_USER}"/printer_data/logs/gingerview-error.log
+
+########################################
+# Fix userrights                       #
+########################################
+
+gpasswd -a www-data "${BASE_USER}"
+chmod g+x /home/"${BASE_USER}"

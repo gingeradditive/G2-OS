@@ -1,0 +1,83 @@
+#!/bin/bash
+set -xe
+export LC_ALL=C
+
+########################################
+# Functions and Basic Configuration    #
+########################################
+
+# Load common functions and set up cleanup trap
+source /common.sh
+install_cleanup_trap
+
+# Load additional configuration (e.g., BASE_USER)
+source /files/00-config
+
+########################################
+# Configuration                        #
+########################################
+
+# KAMP (Klipper Adaptive Meshing & Purging) ships a set of macros that are
+# included from printer.cfg. Nothing is enabled by installing it: the macros
+# only take effect once printer.cfg includes KAMP_Settings.cfg.
+
+REPO="https://github.com/kyleisah/Klipper-Adaptive-Meshing-Purging.git"
+SRC_DIR="/home/${BASE_USER}/Klipper-Adaptive-Meshing-Purging"
+PRINTER_CONFIG_PATH="/home/${BASE_USER}/printer_data/config"
+DEPS=(git)
+
+########################################
+# Install dependencies                 #
+########################################
+
+apt-get install --yes "${DEPS[@]}"
+
+########################################
+# Create printer_data directories      #
+########################################
+
+create_user_directories
+
+########################################
+# Save current dir and switch to home  #
+########################################
+
+pushd "/home/${BASE_USER}" &> /dev/null || exit 1
+
+########################################
+# Clone repository                     #
+########################################
+
+echo "Cloning Repository"
+sudo -u "${BASE_USER}" git clone "${REPO}" "${SRC_DIR}"
+
+########################################
+# Link macros to printer_data/config   #
+########################################
+
+# The macros stay in the checkout and are reached through the KAMP symlink, so
+# that an update through moonraker's update manager is a plain git pull.
+sudo -u "${BASE_USER}" \
+    ln -sfn "${SRC_DIR}/Configuration" "${PRINTER_CONFIG_PATH}/KAMP"
+
+# KAMP_Settings.cfg is the one file the user is meant to edit, so it is a copy
+# rather than a link: a link would make local edits collide with every update.
+if [[ ! -f "${PRINTER_CONFIG_PATH}/KAMP_Settings.cfg" ]]; then
+    sudo -u "${BASE_USER}" \
+        cp "${SRC_DIR}/Configuration/KAMP_Settings.cfg" \
+           "${PRINTER_CONFIG_PATH}/KAMP_Settings.cfg"
+fi
+
+########################################
+# Return to saved directory            #
+########################################
+
+popd &> /dev/null || exit 1
+
+########################################
+# Add config to moonraker.conf         #
+########################################
+
+if [[ -f $MOONRAKER_CONFIG ]]; then
+    cat /files/moonraker_kamp.conf >> "$MOONRAKER_CONFIG"
+fi

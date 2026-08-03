@@ -1,0 +1,85 @@
+#!/bin/bash
+set -xe
+export LC_ALL=C
+
+########################################
+# Functions and Basic Configuration    #
+########################################
+
+# Load common functions and set up cleanup trap
+source /common.sh
+install_cleanup_trap
+
+# Load additional configuration (e.g., BASE_USER)
+source /files/00-config
+
+########################################
+# Configuration                        #
+########################################
+
+# G2-Service is the machine's local backend: Wi-Fi, timezone and machine
+# configuration, served on :8000 and proxied by GingerView at /service/.
+#
+# It runs last on purpose. Its installer drops an nginx location into
+# /etc/nginx/g2-locations.d/, which only has an effect once the GingerView site
+# that includes that directory exists (52-gingerview), and it appends its own
+# update_manager block to moonraker.conf (51-moonraker).
+
+REPO="https://github.com/gingeradditive/G2-Service.git"
+SRC_DIR="/home/${BASE_USER}/G2-Service"
+
+# python3-venv so the installer's preferred `python3 -m venv` works. Without it
+# the installer falls back to `virtualenv`, which is only present because the
+# Kalico module happens to install it — an implicit dependency between two
+# modules that is not worth keeping.
+DEPS=(git python3-venv)
+
+########################################
+# Install dependencies                 #
+########################################
+
+apt-get install --yes "${DEPS[@]}"
+
+########################################
+# Save current dir and switch to home  #
+########################################
+
+pushd "/home/${BASE_USER}" &> /dev/null || exit 1
+
+########################################
+# Clone repository                     #
+########################################
+
+echo "Cloning Repository"
+sudo -u "${BASE_USER}" git clone "${REPO}" "${SRC_DIR}"
+
+########################################
+# Jump into G2-Service, run installer  #
+# and go back to home                  #
+########################################
+
+echo "Execute installer"
+pushd "${SRC_DIR}" &> /dev/null || exit 1
+
+# Run as BASE_USER, which is the contract the installer documents: it creates
+# the venv as the owner of the checkout, so that moonraker's update manager can
+# later reinstall dependencies as that same user. It escalates with sudo for the
+# few steps that need root, which works here because passwordless sudo is still
+# in place until 98-remove-passwordless-sudo.
+sudo -u "${BASE_USER}" bash ./Scripts/install.sh
+
+popd &> /dev/null || exit 1
+
+########################################
+# Return to saved directory            #
+########################################
+
+popd &> /dev/null || exit 1
+
+########################################
+# Enable service                       #
+########################################
+
+# The installer already enables it; this is the idempotent belt-and-braces the
+# other modules use, and it keeps the enablement visible in the build log.
+systemctl_if_exists enable g2-service.service

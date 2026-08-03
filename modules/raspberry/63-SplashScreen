@@ -1,0 +1,97 @@
+#!/bin/bash
+set -xe
+export LC_ALL=C
+
+########################################
+# Functions and Basic Configuration    #
+########################################
+
+# Load common functions and set up cleanup trap
+source /common.sh
+install_cleanup_trap
+
+# Load additional configuration (e.g., BASE_USER)
+source /files/00-config
+
+########################################
+# Configuration                        #
+########################################
+
+# Replaces the Raspberry Pi boot output with the G2 logo: the machine is an
+# appliance, and an operator turning it on should not be looking at a kernel log.
+#
+# fbi draws straight to the framebuffer and keeps the image up until something
+# else writes to it, which on a Lite image is nothing — so the logo stays for
+# the whole boot.
+
+DEPS=(fbi)
+
+SPLASHSCREEN_BOOT_CONFIG="${BOOT_PATH}/config.txt"
+SPLASHSCREEN_CMDLINE_CONFIG="${BOOT_PATH}/cmdline.txt"
+# Deliberately not under /home/${BASE_USER}: the first boot may rename that user,
+# and a splash service pointing into the old home would fail from then on.
+SPLASHSCREEN_IMAGE_DIR="/usr/share/${DIST_NAME,,}"
+SPLASHSCREEN_IMAGE="${SPLASHSCREEN_IMAGE_DIR}/splash.png"
+SPLASHSCREEN_SERVICE_FILE="/etc/systemd/system/splashscreen.service"
+SPLASHSCREEN_CMDLINE_ARGS="logo.nologo consoleblank=1 loglevel=0 quiet"
+
+########################################
+# Install dependencies                 #
+########################################
+
+apt-get install --yes "${DEPS[@]}"
+
+########################################
+# Install the splash image             #
+########################################
+
+install -d -m 0755 "${SPLASHSCREEN_IMAGE_DIR}"
+install -m 0644 /files/splash.png "${SPLASHSCREEN_IMAGE}"
+
+########################################
+# Quieten the boot                     #
+########################################
+
+# Both files live on the boot partition, whose mount point is /boot on older
+# layouts and /boot/firmware from Bookworm on. $BOOT_PATH is what CustoPiZer
+# sets to the right one; hardcoding either breaks on the other.
+if ! grep -q "^disable_splash=1" "${SPLASHSCREEN_BOOT_CONFIG}"; then
+    echo "disable_splash=1" >> "${SPLASHSCREEN_BOOT_CONFIG}"
+fi
+
+if ! grep -q "logo.nologo" "${SPLASHSCREEN_CMDLINE_CONFIG}"; then
+    # cmdline.txt is a single line; the arguments have to be appended to it
+    # rather than added on a new one, which the kernel would ignore.
+    sed -i "1s|\$| ${SPLASHSCREEN_CMDLINE_ARGS}|" "${SPLASHSCREEN_CMDLINE_CONFIG}"
+fi
+
+echo "Boot configuration files modified successfully."
+
+########################################
+# Install and enable the service       #
+########################################
+
+cat > "${SPLASHSCREEN_SERVICE_FILE}" <<EOF
+[Unit]
+Description=Splash screen
+DefaultDependencies=no
+After=local-fs.target
+Before=graphical.target
+
+[Service]
+ExecStartPre=/usr/bin/sleep 2
+ExecStart=/usr/bin/fbi --noverbose -a ${SPLASHSCREEN_IMAGE}
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty1
+
+[Install]
+WantedBy=sysinit.target
+EOF
+chmod 644 "${SPLASHSCREEN_SERVICE_FILE}"
+
+########################################
+# Enable service                       #
+########################################
+
+systemctl_if_exists enable splashscreen.service

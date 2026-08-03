@@ -17,7 +17,7 @@ jobs:
       - name: "📥 Checkout"
         uses: actions/checkout@v6
         with:
-          ref: develop
+          ref: main
           fetch-depth: 0
 
       - name: "🔎 Check release number"
@@ -65,7 +65,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.version }}
-          name: MainsailOS ${{ github.event.inputs.version }}
+          name: G2-OS ${{ github.event.inputs.version }}
           body: ${{ steps.changelog.outputs.content }}
           draft: true
           prerelease: false
@@ -79,7 +79,7 @@ jobs:
       - name: "📥 Checkout"
         uses: actions/checkout@v6
         with:
-          ref: develop
+          ref: main
 
       - name: "🛠 Generate matrix from config.yml"
         id: create-matrix
@@ -106,7 +106,7 @@ jobs:
       - name: "📥 Checkout"
         uses: actions/checkout@v6
         with:
-          ref: develop
+          ref: main
 
       - name: "#️⃣️ Set RELEASE_TAG from VERSION file"
         run: |
@@ -209,7 +209,7 @@ jobs:
       - name: "✏ Rename image"
         working-directory: ./build
         run: |
-          IMAGE="${{ env.DATE }}-MainsailOS-${{ matrix.name }}-${{ env.RELEASE_TAG }}.img"
+          IMAGE="${{ env.DATE }}-G2-OS-${{ matrix.name }}-${{ env.RELEASE_TAG }}.img"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
           mv output.img "${IMAGE}"
@@ -256,7 +256,7 @@ jobs:
 
           # set name, if it is not set
           if 'name' not in rpi_data:
-              rpi_data['name'] = "MainsailOS $VERSION$"
+              rpi_data['name'] = "G2-OS $VERSION$"
 
           # replace $VERSION$ in name
           rpi_data['name'] = rpi_data['name'].replace('$VERSION$', "${{ env.RELEASE_TAG }}")
@@ -346,21 +346,6 @@ jobs:
         run: |
           gh release upload "${{ github.event.inputs.version }}" "rpi-imager.json" --clobber
 
-      - name: "🔧 Move in seperate dir"
-        if: ${{ github.repository_owner == 'Mainsail-Crew' }}
-        run: |
-          mkdir upload
-          mv rpi-imager.json ./upload
-
-      - name: "📋 Upload to remote server"
-        if: ${{ github.repository_owner == 'Mainsail-Crew' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
-        with:
-          server: ${{ secrets.OSHOST }}
-          username: ${{ secrets.OSUSER }}
-          password: ${{ secrets.OSPASSWORD }}
-          local-dir: ./upload/
-
   update-changelog:
     needs: [ build ]
     runs-on: ubuntu-latest
@@ -368,7 +353,7 @@ jobs:
       - name: "📥 Checkout"
         uses: actions/checkout@v6
         with:
-          ref: develop
+          ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
@@ -391,20 +376,5 @@ jobs:
           git commit -m "docs(changelog): update changelog"
           git push
 
-  merge-develop-to-master:
-    needs: [ update-changelog ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: "📥 Checkout"
-        uses: actions/checkout@v6
-        with:
-          ref: master
-          fetch-depth: 0
-
-      - name: "FF merge to master"
-        uses: MaximeHeckel/github-action-merge-fast-forward@v1.1.0
-        with:
-          branchtomerge: origin/develop
-          branch: master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+# Upstream ends the release by fast-forwarding develop into master. G2-OS has a
+# single long-lived branch (main), so there is nothing left to merge.

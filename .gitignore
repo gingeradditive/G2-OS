@@ -17,3 +17,6 @@ src/build.log
 # Ignore Clankers
 .pi
 .claude
+
+# Ignore macOS folder metadata
+.DS_Store

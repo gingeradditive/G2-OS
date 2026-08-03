@@ -78,6 +78,22 @@ popd &> /dev/null || exit 1
 ########################################
 
 cp /files/moonraker.conf /home/"${BASE_USER}"/printer_data/config/moonraker.conf
+chown "${BASE_USER}":"${BASE_USER}" /home/"${BASE_USER}"/printer_data/config/moonraker.conf
+
+########################################
+# Copy the allowed services list       #
+########################################
+
+# Moonraker will only act on a service that matches moonraker*/klipper* or is
+# listed here. Ours match neither: the firmware unit is kalico.service, not
+# klipper.service, and g2-service is registered as a managed_service by its own
+# update_manager block. Without this file, "restart firmware" from the interface
+# and every post-update restart would fail with "Service not allowed".
+#
+# Moonraker seeds this file from its own defaults only when it does not already
+# exist, so depositing it at build time is what makes ours win.
+cp /files/moonraker.asvc /home/"${BASE_USER}"/printer_data/moonraker.asvc
+chown "${BASE_USER}":"${BASE_USER}" /home/"${BASE_USER}"/printer_data/moonraker.asvc
 
 ########################################
 # Enable service                       #
