@@ -74,7 +74,6 @@ file that lives in another repository.
 -   **USB stick auto-mount** — a stick is mounted read-only under `/media` and
     surfaces inside the gcode folder, so an operator can print from it without a
     terminal.
--   **Boot splash** — the G2 logo replaces the kernel log on boot.
 
 ## Building
 
@@ -104,7 +103,6 @@ order inside the image's chroot:
 | `60-mainsailos` | Release file, hostname `g2`, shared dependencies |
 | `61-EnableUSB` | USB stick auto-mount |
 | `61-postrename-cloudinit` | First-boot user handling (cloud-init) |
-| `63-SplashScreen` | Boot splash |
 | `69-G2-Service` | Clones G2-Service and runs its installer |
 | `98-remove-passwordless-sudo` | Restores the sudo password |
 
@@ -123,7 +121,7 @@ auto-mount, the cloud-init first-boot flow and the Raspberry Pi configuration.
 A fix to one of those belongs in both repositories.
 
 What is specific to the G2: `00-config`, `50-kalico`, `51-moonraker`,
-`52-gingerview`, `60-mainsailos`, `63-SplashScreen`, `69-G2-Service`, the
+`52-gingerview`, `60-mainsailos`, `69-G2-Service`, the
 `kalico.*` and `moonraker*.conf` files and `boot-config.txt`.
 
 ### First boot and the user
