@@ -70,6 +70,9 @@ file that lives in another repository.
 -   **Ready-to-use UART** — the hardware serial port (PL011) is enabled and the
     serial console disabled, so the printer board connects without a USB cable.
 -   **Input Shaper ready** — Kalico's Python dependencies are pre-installed.
+-   **Printer board flashed separately** — the BigTreeTech Octopus is flashed
+    with Kalico before it reaches the machine. The image ships the toolchain to
+    rebuild and reflash it, but never flashes the board by itself.
 -   **Katapult support** — `python3-serial` is included.
 -   **USB stick auto-mount** — a stick is mounted read-only under `/media` and
     surfaces inside the gcode folder, so an operator can print from it without a
