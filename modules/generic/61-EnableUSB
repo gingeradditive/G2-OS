@@ -57,7 +57,8 @@ pushd "/home/${BASE_USER}" &> /dev/null || exit 1
 sudo -u "${BASE_USER}" mkdir -p "${ENABLEUSB_PRINTER_GCODE_FOLDER}"
 
 ## Step 1: create rule file
-sudo -u "${BASE_USER}" ln -s "${ENABLEUSB_MEDIA_FOLDER}" "${ENABLEUSB_PRINTER_GCODE_FOLDER}"
+# No symlink from the gcode folder to ${ENABLEUSB_MEDIA_FOLDER}: Moonraker must not
+# see the stick. G2-Service reads it directly and GingerView imports from it.
 echo "${ENABLEUSB_RULE}" | sudo tee -a "${ENABLEUSB_RULE_FILE}"
 echo "USB rule added to ${ENABLEUSB_RULE_FILE}"
 sudo udevadm control --reload-rules && sudo udevadm trigger
