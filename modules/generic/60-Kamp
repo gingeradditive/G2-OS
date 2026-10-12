@@ -17,26 +17,14 @@ source /files/00-config
 # Configuration                        #
 ########################################
 
-# KAMP (Klipper Adaptive Meshing & Purging) ships a set of macros that are
-# included from printer.cfg. Nothing is enabled by installing it: the macros
-# only take effect once printer.cfg includes KAMP_Settings.cfg.
-
 REPO="https://github.com/kyleisah/Klipper-Adaptive-Meshing-Purging.git"
-SRC_DIR="/home/${BASE_USER}/Klipper-Adaptive-Meshing-Purging"
-PRINTER_CONFIG_PATH="/home/${BASE_USER}/printer_data/config"
-DEPS=(git)
+DEPS="git"
 
 ########################################
 # Install dependencies                 #
 ########################################
 
-apt-get install --yes "${DEPS[@]}"
-
-########################################
-# Create printer_data directories      #
-########################################
-
-create_user_directories
+apt-get install --yes "${DEPS}"
 
 ########################################
 # Save current dir and switch to home  #
@@ -49,24 +37,9 @@ pushd "/home/${BASE_USER}" &> /dev/null || exit 1
 ########################################
 
 echo "Cloning Repository"
-sudo -u "${BASE_USER}" git clone "${REPO}" "${SRC_DIR}"
-
-########################################
-# Link macros to printer_data/config   #
-########################################
-
-# The macros stay in the checkout and are reached through the KAMP symlink, so
-# that an update through moonraker's update manager is a plain git pull.
-sudo -u "${BASE_USER}" \
-    ln -sfn "${SRC_DIR}/Configuration" "${PRINTER_CONFIG_PATH}/KAMP"
-
-# KAMP_Settings.cfg is the one file the user is meant to edit, so it is a copy
-# rather than a link: a link would make local edits collide with every update.
-if [[ ! -f "${PRINTER_CONFIG_PATH}/KAMP_Settings.cfg" ]]; then
-    sudo -u "${BASE_USER}" \
-        cp "${SRC_DIR}/Configuration/KAMP_Settings.cfg" \
-           "${PRINTER_CONFIG_PATH}/KAMP_Settings.cfg"
-fi
+sudo -u "${BASE_USER}" git clone ${REPO} Klipper-Adaptive-Meshing-Purging
+sudo -u "${BASE_USER}" ln -s /home/${BASE_USER}/Klipper-Adaptive-Meshing-Purging/Configuration /home/${BASE_USER}/printer_data/config/KAMP
+sudo -u "${BASE_USER}" cp /home/${BASE_USER}/Klipper-Adaptive-Meshing-Purging/Configuration/KAMP_Settings.cfg /home/${BASE_USER}/printer_data/config/KAMP_Settings.cfg
 
 ########################################
 # Return to saved directory            #

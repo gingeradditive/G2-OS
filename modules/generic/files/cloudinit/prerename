@@ -1,9 +1,17 @@
 #!/bin/bash
 #### Pre-rename for cloud-init based images
 ####
-#### Runs Before=cloud-init-local.service and renames the default "@BASE_USER@"
-#### user to the one requested in /boot[/firmware]/user-data so cloud-init's
-#### users module then operates on the correct, pre-existing user.
+#### Runs Before=cloud-init-local.service. G1OS supports only the default
+#### "@BASE_USER@" user (G1 components hard-code /home/@BASE_USER@, see B04 in
+#### docs/known-issues.md): if /boot[/firmware]/user-data requests a different
+#### user, the user-data is rewritten so cloud-init's users module applies the
+#### requested password, SSH keys and sudo rules to the pre-existing
+#### "@BASE_USER@" user instead of creating/renaming one.
+####
+#### cloud-init applies `groups:` with `usermod -G`, which replaces the
+#### supplementary groups: the groups "@BASE_USER@" got at build time
+#### (network/klipperscreen for KlipperScreen's polkit rule, tty, ...) are
+#### merged into the user-data so they survive.
 
 set -eu
 export LC_ALL=C
@@ -82,61 +90,94 @@ load_requested_user() {
     NEW_LOCK_PASSWD="${USER_FIELDS[2]:-false}"
 }
 
-nothing_to_rename() {
+nothing_to_map() {
     if [[ -z "${NEW_USER}" ]]; then
-        log "user-data keeps '@BASE_USER@' (or has no custom user), nothing to rename"
+        log "user-data keeps '@BASE_USER@' (or has no custom user), nothing to do"
         return 0
     fi
 
     if ! id -u @BASE_USER@ >/dev/null 2>&1; then
-        log "no '@BASE_USER@' user present, nothing to rename"
-        return 0
-    fi
-
-    if ! [[ "${NEW_USER}" =~ ^[a-z_][a-z0-9_-]*[$]?$ ]]; then
-        log "invalid username '${NEW_USER}', nothing to rename"
-        return 0
-    fi
-
-    if id -u "${NEW_USER}" >/dev/null 2>&1; then
-        log "target user '${NEW_USER}' already exists, leaving system untouched"
+        log "no '@BASE_USER@' user present, nothing to do"
         return 0
     fi
 
     return 1
 }
 
-rename_user() {
-    log "renaming '@BASE_USER@' to '${NEW_USER}' (home: /home/${NEW_USER})"
+map_user_to_base() {
+    local userdata="$1"
 
-    usermod -l "${NEW_USER}" @BASE_USER@
+    log "G1OS supports only '@BASE_USER@': mapping requested user '${NEW_USER}' to '@BASE_USER@' in ${userdata}"
 
-    if getent group @BASE_USER@ >/dev/null 2>&1; then
-        groupmod -n "${NEW_USER}" @BASE_USER@
-    fi
+    python3 - "${userdata}" "${NEW_USER}" <<'PY'
+import os, sys, yaml
 
-    if [[ -d /home/@BASE_USER@ ]]; then
-        usermod -d "/home/${NEW_USER}" -m "${NEW_USER}"
-    else
-        usermod -d "/home/${NEW_USER}" "${NEW_USER}"
-    fi
+path, requested = sys.argv[1], sys.argv[2]
+
+with open(path, "r") as fh:
+    data = yaml.safe_load(fh) or {}
+
+users = data.get("users") or []
+for i, user in enumerate(users):
+    if user == requested:
+        users[i] = "@BASE_USER@"
+    elif isinstance(user, dict) and user.get("name") == requested:
+        user["name"] = "@BASE_USER@"
+
+tmp = path + ".tmp"
+with open(tmp, "w") as fh:
+    fh.write("#cloud-config\n")
+    yaml.safe_dump(data, fh, default_flow_style=False, sort_keys=False)
+os.replace(tmp, path)
+PY
+}
+
+keep_build_groups() {
+    local userdata="$1"
+    local build_groups
+
+    build_groups="$(id -nG @BASE_USER@ 2>/dev/null)" || return 0
+
+    python3 - "${userdata}" ${build_groups} <<'PY'
+import os, sys, yaml
+
+path, build_groups = sys.argv[1], sys.argv[2:]
+
+with open(path, "r") as fh:
+    data = yaml.safe_load(fh) or {}
+
+changed = False
+users = data.get("users")
+for user in users if isinstance(users, list) else []:
+    if not isinstance(user, dict) or user.get("name") != "@BASE_USER@":
+        continue
+    # No `groups:` -> cloud-init leaves the groups untouched
+    groups = user.get("groups")
+    if not groups:
+        continue
+    as_str = isinstance(groups, str)
+    current = [g.strip() for g in groups.split(",")] if as_str else list(groups)
+    missing = [g for g in build_groups if g != "@BASE_USER@" and g not in current]
+    if missing:
+        current += missing
+        user["groups"] = ",".join(current) if as_str else current
+        changed = True
+        print("kept build groups: " + ",".join(missing))
+
+if changed:
+    tmp = path + ".tmp"
+    with open(tmp, "w") as fh:
+        fh.write("#cloud-config\n")
+        yaml.safe_dump(data, fh, default_flow_style=False, sort_keys=False)
+    os.replace(tmp, path)
+PY
 }
 
 apply_password() {
+    # cloud-init skips `passwd` for a pre-existing user, so set it here.
     if [[ -n "${NEW_PASSWD}" && "${NEW_LOCK_PASSWD}" != "true" ]]; then
-        log "applying passwd hash from user-data for '${NEW_USER}'"
-        usermod -p "${NEW_PASSWD}" "${NEW_USER}"
-    fi
-}
-
-update_sudoers() {
-    local old_file="/etc/sudoers.d/010_@BASE_USER@-nopasswd"
-    local new_file="/etc/sudoers.d/010_${NEW_USER}-nopasswd"
-
-    if [[ -f "${old_file}" ]]; then
-        mv "${old_file}" "${new_file}"
-        sed -i "s/^@BASE_USER@ /${NEW_USER} /" "${new_file}"
-        chmod 0440 "${new_file}"
+        log "applying passwd hash from user-data to '@BASE_USER@'"
+        usermod -p "${NEW_PASSWD}" @BASE_USER@
     fi
 }
 
@@ -156,17 +197,19 @@ main() {
     fi
 
     load_requested_user "${userdata}"
-    if nothing_to_rename; then
-        touch "${STATE_FILE}"
-        exit 0
+    if ! nothing_to_map; then
+        map_user_to_base "${userdata}"
+        apply_password
     fi
 
-    rename_user
-    apply_password
-    update_sudoers
+    local kept
+    kept="$(keep_build_groups "${userdata}")"
+    if [[ -n "${kept}" ]]; then
+        log "${kept}"
+    fi
 
     touch "${STATE_FILE}"
-    log "rename complete; cloud-init will configure '${NEW_USER}' next"
+    log "user-data ready; cloud-init will configure '@BASE_USER@' next"
 
     exit 0
 }
