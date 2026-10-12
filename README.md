@@ -74,9 +74,9 @@ file that lives in another repository.
     with Kalico before it reaches the machine. The image ships the toolchain to
     rebuild and reflash it, but never flashes the board by itself.
 -   **Katapult support** — `python3-serial` is included.
--   **USB stick auto-mount** — a stick is mounted read-only under `/media` and
-    surfaces inside the gcode folder, so an operator can print from it without a
-    terminal.
+-   **USB stick auto-mount** — a stick is mounted read-only on `/media`. It is
+    not linked into the gcode folder: G2-Service reads it and GingerView offers
+    an import button that copies a file into the printer's storage.
 
 ## Building
 
@@ -119,12 +119,13 @@ unattended inside a build chroot.
 G2-OS is built on the same base as [G1OS](https://github.com/gingeradditive/G1OS),
 the image of the Ginger G1, which is the one validated on hardware. Every module
 that is not specific to the G2 is a byte-identical copy of the G1OS one:
-networking, CAN, Moonraker's companions (Crowsnest, Sonar, timelapse, KAMP), USB
-auto-mount, the cloud-init first-boot flow and the Raspberry Pi configuration.
+networking, CAN, Moonraker's companions (Crowsnest, Sonar, timelapse, KAMP),
+the cloud-init first-boot flow and the Raspberry Pi configuration.
 A fix to one of those belongs in both repositories.
 
 What is specific to the G2: `00-config`, `50-kalico`, `51-moonraker`,
-`52-gingerview`, `60-mainsailos`, `69-G2-Service`, the
+`52-gingerview`, `60-mainsailos`, `61-EnableUSB` (no `gcodes/media` symlink,
+see above), `69-G2-Service`, the
 `kalico.*` and `moonraker*.conf` files and `boot-config.txt`.
 
 ### First boot and the user
