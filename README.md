@@ -24,7 +24,8 @@ smaller the divergence, the cheaper it is to pull in their work.
 
 ## Target hardware
 
-**Raspberry Pi 4 Model B, 64-bit, only.** `config.yml` builds a single image.
+**Raspberry Pi 4 Model B, 64-bit, only.** `config.yml` declares that one board,
+in a production and a development variant (see [Development image](#development-image)).
 Upstream's 32-bit Pi, Orange Pi and BigTreeTech CB1 targets are not carried here
 because we neither ship nor test that hardware.
 
@@ -69,17 +70,19 @@ file that lives in another repository.
 -   **Ready-to-use UART** — the hardware serial port (PL011) is enabled and the
     serial console disabled, so the printer board connects without a USB cable.
 -   **Input Shaper ready** — Kalico's Python dependencies are pre-installed.
+-   **Printer board flashed separately** — the BigTreeTech Octopus is flashed
+    with Kalico before it reaches the machine. The image ships the toolchain to
+    rebuild and reflash it, but never flashes the board by itself.
 -   **Katapult support** — `python3-serial` is included.
--   **USB stick auto-mount** — a stick is mounted read-only under `/media` and
-    surfaces inside the gcode folder, so an operator can print from it without a
-    terminal.
--   **Boot splash** — the G2 logo replaces the kernel log on boot.
+-   **USB stick auto-mount** — a stick is mounted read-only on `/media`. It is
+    not linked into the gcode folder: G2-Service reads it and GingerView offers
+    an import button that copies a file into the printer's storage.
 
 ## Building
 
-Every push to `main` builds an image through GitHub Actions and uploads it as a
-workflow artifact. To publish a release, trigger the `Release` workflow manually
-with a SemVer version.
+Every push to `main` and every pull request builds the images through GitHub
+Actions and uploads them as workflow artifacts. To publish a release, trigger
+the `Release` workflow manually with a SemVer version.
 
 There is no supported local build; the image is produced by
 [CustoPiZer](https://github.com/OctoPrint/CustoPiZer) in CI.
@@ -99,11 +102,10 @@ order inside the image's chroot:
 | `51-moonraker` | Moonraker + `moonraker.conf` |
 | `52-gingerview` | Clones GingerView and runs its own `script/install.sh` |
 | `53-crowsnest`, `54-timelapse`, `55-sonar` | Webcam, timelapse, keepalive |
-| `56-kamp` | KAMP macros |
+| `60-Kamp` | KAMP macros |
 | `60-mainsailos` | Release file, hostname `g2`, shared dependencies |
-| `61-postrename-cloudinit` | First-boot user rename (cloud-init) |
-| `62-EnableUSB` | USB stick auto-mount |
-| `63-SplashScreen` | Boot splash |
+| `61-EnableUSB` | USB stick auto-mount |
+| `61-postrename-cloudinit` | First-boot user handling (cloud-init) |
 | `69-G2-Service` | Clones G2-Service and runs its installer |
 | `98-remove-passwordless-sudo` | Restores the sudo password |
 
@@ -112,14 +114,46 @@ installing (`52-gingerview`, `69-G2-Service`) rather than reimplementing it:
 those installers are tested in their own repositories and are written to run
 unattended inside a build chroot.
 
-### First boot and the user rename
+### Shared with G1OS
 
-The image ships with the build-time user `pi`. If the Raspberry Pi Imager is
-told to use a different username, cloud-init renames it on first boot and
-`/usr/local/lib/mainsailos/postrename-lib` rewrites the paths that embed the old
-one: systemd units, `.env` files, venv shebangs, the nginx site and the
-symlinks. **A first boot with a username other than `pi` is the single most
-valuable thing to test on a new image.**
+G2-OS is built on the same base as [G1OS](https://github.com/gingeradditive/G1OS),
+the image of the Ginger G1, which is the one validated on hardware. Every module
+that is not specific to the G2 is a byte-identical copy of the G1OS one:
+networking, CAN, Moonraker's companions (Crowsnest, Sonar, timelapse, KAMP),
+the cloud-init first-boot flow and the Raspberry Pi configuration.
+A fix to one of those belongs in both repositories.
+
+What is specific to the G2: `00-config`, `50-kalico`, `51-moonraker`,
+`52-gingerview`, `60-mainsailos`, `61-EnableUSB` (no `gcodes/media` symlink,
+see above), `69-G2-Service`, the
+`kalico.*` and `moonraker*.conf` files and `boot-config.txt`.
+
+### First boot and the user
+
+G2-OS supports only the `pi` user, as G1OS does. If the Raspberry Pi Imager is
+told to use a different username, `mainsailos-prerename` rewrites cloud-init's
+user-data before cloud-init runs, so that the password, SSH keys and sudo
+settings chosen there are applied to `pi`. The home directory never moves, and
+the groups `pi` was given at build time (`tty`, `dialout`, which Kalico needs
+for the serial port) are kept.
+
+`postrename-lib` is carried unchanged from G1OS and does nothing in this flow.
+
+### Development image
+
+`config.yml` declares a second target, `raspberry_pi-arm64-trixie-dev`: the
+production image plus **Mainsail on port 81** (`http://g2.local:81`), as a
+debugging aid. GingerView keeps port 80 and is not replaced.
+
+| Trigger | Images |
+|---|---|
+| Push to `main`, pull request, manual run of `Build Images` | production and development, as workflow artifacts |
+| `Release` workflow | production only |
+
+The development target is marked `build_only`, which the release workflow
+filters out, and Mainsail lives in `modules/special/58-mainsail-debug`, which
+only that target pulls in. A published image therefore never contains it. On a
+machine, `/etc/g2-os-variant` exists only on a development image.
 
 ## Licence
 

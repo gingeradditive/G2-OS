@@ -1,14 +1,19 @@
-# G2-OS builds exactly one image: the Ginger G2 is a Raspberry Pi 4 Model B and
-# nothing else. Upstream MainsailOS ships six targets (32-bit Pi, four Orange Pi
+# G2-OS targets exactly one board: the Ginger G2 is a Raspberry Pi 4 Model B and
+# nothing else. It is built twice, as the production image and as a development
+# variant (see the end of this file). Upstream MainsailOS ships six targets (32-bit Pi, four Orange Pi
 # variants and the BTT CB1); carrying them here would mean maintaining and
 # testing hardware we do not sell.
 #
 # init_format for the Raspberry Pi Imager is not declared under rpi_json on
 # purpose: the release workflow derives it from env.INIT_FORMAT below.
 
-- name: raspberry_pi-arm64-trixie
+- &production
+  name: raspberry_pi-arm64-trixie
   type: raspberry
-  img_download_url: "https://downloads.raspberrypi.org/raspios_lite_arm64_latest.torrent"
+  # HTTPS, not the .torrent upstream uses: the torrent of the 2026-09-15 release
+  # has no web seed and the tracker rejects it, which left the G1OS pipeline
+  # hanging at 0%. The URL redirects to the dated .img.xz.
+  img_download_url: "https://downloads.raspberrypi.org/raspios_lite_arm64_latest"
   img_hash_url: "https://downloads.raspberrypi.org/raspios_lite_arm64_latest.sha256"
   env:
     ARCH: arm64
@@ -27,3 +32,15 @@
     icon: "https://os.mainsail.xyz/rpi-imager.png"
     devices:
       - "pi4-64bit"
+
+# Development image: the production image plus Mainsail on port 81, as a
+# debugging aid next to GingerView (modules/special/58-mainsail-debug).
+#
+# build_only keeps it out of releases: release.yml drops every build_only
+# target, so it is only ever produced as a workflow artifact of build.yml, on
+# pushes to main, on pull requests and on manual runs.
+- <<: *production
+  name: raspberry_pi-arm64-trixie-dev
+  build_only: true
+  special_modules:
+    - 58-mainsail-debug
