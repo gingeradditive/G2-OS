@@ -1,0 +1,100 @@
+#!/bin/bash
+set -xe
+export LC_ALL=C
+
+########################################
+# Functions and Basic Configuration    #
+########################################
+
+# Load common functions and set up cleanup trap
+source /common.sh
+install_cleanup_trap
+
+# Load additional configuration (e.g., BASE_USER)
+source /files/00-config
+
+########################################
+# Configuration                        #
+########################################
+
+# Development images only. Mainsail is installed NEXT TO GingerView, on its own
+# port, as a debugging aid: console, config editor, update manager. It does not
+# replace anything: GingerView keeps port 80 and stays the operator interface.
+#
+# This module lives in modules/special/ and is only pulled in by the config.yml
+# target that lists it in special_modules. That target is build_only, which the
+# release workflow filters out, so a published image never contains Mainsail.
+#
+# It sorts after 52-gingerview on purpose: GingerView's installer disables any
+# Mainsail site it finds competing for its port, and must run first.
+
+DOWNLOAD_URL="https://github.com/mainsail-crew/mainsail/releases/latest/download/mainsail.zip"
+SRC_DIR="/home/${BASE_USER}/mainsail"
+SITE_NAME="mainsail-debug"
+MAINSAIL_PORT="81"
+DEPS=(nginx unzip wget)
+
+########################################
+# Install dependencies                 #
+########################################
+
+apt-get install --yes "${DEPS[@]}"
+
+########################################
+# Download latest release              #
+########################################
+
+pushd /home/"${BASE_USER}" &> /dev/null || exit 1
+
+echo "Downloading Mainsail"
+sudo -u "${BASE_USER}" wget -q --show-progress -O mainsail.zip "${DOWNLOAD_URL}"
+sudo -u "${BASE_USER}" unzip mainsail.zip -d "${SRC_DIR}"
+rm /home/"${BASE_USER}"/mainsail.zip
+
+popd &> /dev/null || exit 1
+
+########################################
+# Config Webserver                     #
+########################################
+
+echo "Install the ${SITE_NAME} site on port ${MAINSAIL_PORT}"
+cp /files/mainsail-debug-nginx /etc/nginx/sites-available/"${SITE_NAME}"
+ln -sf /etc/nginx/sites-available/"${SITE_NAME}" /etc/nginx/sites-enabled/"${SITE_NAME}"
+
+create_user_directories
+
+echo "Linking log files"
+ln -sf /var/log/nginx/mainsail-access.log /home/"${BASE_USER}"/printer_data/logs/mainsail-access.log
+ln -sf /var/log/nginx/mainsail-error.log /home/"${BASE_USER}"/printer_data/logs/mainsail-error.log
+
+########################################
+# Fix userrights                       #
+########################################
+
+gpasswd -a www-data "${BASE_USER}"
+chmod g+x /home/"${BASE_USER}"
+
+########################################
+# Add config to moonraker.conf         #
+########################################
+
+if [[ -f $MOONRAKER_CONFIG ]]; then
+    cat >> "$MOONRAKER_CONFIG" <<EOF
+
+### Mainsail (development image only, http://<host>:${MAINSAIL_PORT})
+
+[update_manager mainsail]
+type: web
+channel: stable
+repo: mainsail-crew/mainsail
+path: ~/mainsail
+EOF
+fi
+
+########################################
+# Mark the image as a development one  #
+########################################
+
+# 60-mainsailos writes /etc/<dist>-release later and would overwrite a line
+# added to it here, so the marker gets a file of its own.
+echo "dev (Mainsail on port ${MAINSAIL_PORT})" > /etc/"${DIST_NAME,,}"-variant

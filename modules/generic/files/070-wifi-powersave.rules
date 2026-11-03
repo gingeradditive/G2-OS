@@ -1,4 +1,4 @@
 ACTION=="add", \
 SUBSYSTEM=="net", \
-KERNEL=="wlan*" \
+KERNEL=="wlan*", \
 RUN+="/usr/sbin/iw %k set power_save off"

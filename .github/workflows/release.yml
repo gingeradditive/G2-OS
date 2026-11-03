@@ -123,12 +123,13 @@ jobs:
 
       - name: "⬇ Download Image via Torrent"
         if: ${{ endsWith(matrix.img_download_url, '.torrent') }}
+        timeout-minutes: 30
         run: aria2c -d build --seed-time=0 --enable-dht=false "${{ matrix.img_download_url }}"
 
       - name: "⬇ Download Image via wget"
         if: ${{ !endsWith(matrix.img_download_url, '.torrent') }}
         working-directory: ./build
-        run: wget ${{ matrix.img_download_url }}
+        run: wget --trust-server-names --progress=dot:giga "${{ matrix.img_download_url }}"
 
       - name: "🔐 Verify image"
         working-directory: ./build

@@ -14,6 +14,9 @@ User=pi
 RemainAfterExit=yes
 WorkingDirectory=/home/pi/kalico
 EnvironmentFile=/home/pi/printer_data/systemd/kalico.env
+# Drop a truncated/corrupt c_helper.so (e.g. power loss during the first
+# build) so Kalico rebuilds it instead of failing to load it forever.
+ExecStartPre=-/bin/sh -c 'f=/home/pi/kalico/klippy/chelper/c_helper.so; [ ! -e "$$f" ] || /home/pi/kalico-env/bin/python -c "import ctypes, sys; ctypes.CDLL(sys.argv[1])" "$$f" 2>/dev/null || rm -f "$$f"'
 ExecStart=/home/pi/kalico-env/bin/python $KALICO_ARGS
 Restart=always
 RestartSec=10

@@ -1,5 +1,5 @@
 [Unit]
-Description=MainsailOS pre-rename (rename @BASE_USER@ -> custom user from user-data, before cloud-init)
+Description=G1OS pre-rename (map custom user from user-data to @BASE_USER@, before cloud-init)
 DefaultDependencies=no
 After=systemd-remount-fs.service local-fs.target
 # BOOT_REQUIRE is substituted at install time with "/boot/firmware" on RPi,

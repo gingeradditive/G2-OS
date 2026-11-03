@@ -5,7 +5,7 @@
 # refactored by Stefan Dej aka meteyou <meteyou@mainsail.xyz>
 #
 # Copyright 2024 - till today
-# https://github.com/mainsail-crew/MainsailOS
+# https://github.com/mainsail-crew/G1OS
 #
 # This file is distributed under GPLv3
 #
@@ -27,6 +27,8 @@ set -euo pipefail
 readonly CMDLINE="/boot/firmware/cmdline.txt"
 readonly ARMBIANENV="/boot/armbianEnv.txt"
 readonly CONNFILE="/etc/NetworkManager/system-connections/preconfigured.nmconnection"
+# Leading dot: ignored by NetworkManager until moved into place
+readonly CONNTMP="/etc/NetworkManager/system-connections/.preconfigured.nmconnection.tmp"
 readonly CFG80211="/etc/modprobe.d/cfg80211.conf"
 
 # Global variables
@@ -114,7 +116,7 @@ gen_uuid() {
 }
 
 gen_nmconnection() {
-    cat <<- EOF >"${CONNFILE}"
+    cat <<- EOF >"${CONNTMP}"
 [connection]
 id=preconfigured
 uuid=${UUID}
@@ -135,8 +137,7 @@ EOF
 
 gen_keymgmt() {
     if [[ -n "${PASSWORD:-}" ]]; then
-        PSK_HASH="$(gen_psk)"
-        cat <<- EOF >>${CONNFILE}
+        cat <<- EOF >>"${CONNTMP}"
 [wifi-security]
 key-mgmt=${KEYMGMT}
 psk=${PSK_HASH}
@@ -146,6 +147,31 @@ EOF
 
 gen_psk() {
     wpa_passphrase "${SSID}" "${PASSWORD}" | sed -n '/[[:space:]]psk=/s/.*[[:space:]]psk=//p'
+}
+
+# Validate before touching any file, so a bad headless_nm.txt never
+# removes a working connection (e.g. one set up by Raspberry Pi Imager).
+validate_config() {
+    if [[ -z "${SSID}" ]]; then
+        log "ERROR: SSID is empty, leaving network configuration untouched"
+        return 1
+    fi
+
+    if [[ -n "${PASSWORD}" ]]; then
+        # wpa_passphrase enforces 8..63 printable ASCII characters
+        if ! PSK_HASH="$(gen_psk)" || [[ -z "${PSK_HASH}" ]]; then
+            log "ERROR: invalid PASSWORD (must be 8..63 ASCII characters), leaving network configuration untouched"
+            return 1
+        fi
+    fi
+
+    case "${HIDDEN,,}" in
+        true|false) ;;
+        *)
+            [[ -n "${HIDDEN}" ]] && log "WARNING: invalid HIDDEN value '${HIDDEN}', using 'false'"
+            HIDDEN="false"
+            ;;
+    esac
 }
 
 set_regdomain() {
@@ -199,8 +225,12 @@ main() {
     HIDDEN="$(get_value HIDDEN)"
     REGDOMAIN="$(get_value REGDOMAIN)"
 
-    # Remove preconfiguration if present
-    [[ -f "${CONNFILE}" ]] && rm -f "${CONNFILE}"
+    validate_config || exit 1
+
+    # Build the connection in a temp file (0600, as NetworkManager requires)
+    # and replace the preconfigured one only once it is complete
+    trap 'rm -f "${CONNTMP}"' EXIT
+    (umask 077 && : >"${CONNTMP}")
 
     gen_uuid
     gen_nmconnection
@@ -208,8 +238,7 @@ main() {
 
     set_regdomain
 
-    # NetworkManager only accepts 0600 permissions for configs
-    chmod 0600 "${CONNFILE}"
+    mv -f "${CONNTMP}" "${CONNFILE}"
 
     # Reload NetworkManager to apply changes, if it is active
     if systemctl is-active --quiet NetworkManager; then
